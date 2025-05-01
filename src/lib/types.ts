@@ -8,6 +8,7 @@ export interface Transaction {
   type: 'income' | 'expense';
   notes?: string;
   tags?: string[];
+  currency?: string;
 }
 
 export interface Category {
@@ -23,4 +24,11 @@ export interface Budget {
   categoryId: string;
   amount: number;
   period: 'monthly' | 'weekly' | 'yearly';
+  currency?: string;
+}
+
+export interface UserSettings {
+  currency: string;
+  language: string;
+  storageType: 'local' | 'supabase';
 }

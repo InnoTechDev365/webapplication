@@ -7,8 +7,8 @@ import {
   SidebarFooter,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { SupabaseConnector } from "@/components/SupabaseConnector";
 
 export function AppSidebar() {
   const location = useLocation();
@@ -55,12 +55,7 @@ export function AppSidebar() {
 
       <SidebarFooter>
         <div className="p-4">
-          <div className="rounded-lg bg-white/10 p-4 text-white text-center">
-            <p className="text-sm mb-2">Connect your bank</p>
-            <Button variant="outline" size="sm" className="w-full text-white border-white hover:bg-white hover:text-sidebar-background">
-              Connect
-            </Button>
-          </div>
+          <SupabaseConnector />
         </div>
       </SidebarFooter>
     </Sidebar>

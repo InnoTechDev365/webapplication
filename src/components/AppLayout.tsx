@@ -2,6 +2,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Outlet } from "react-router-dom";
+import { CurrencySelector } from "@/components/CurrencySelector";
 
 export function AppLayout() {
   return (
@@ -13,6 +14,7 @@ export function AppLayout() {
             <SidebarTrigger />
             <div className="flex-1"></div>
             <div className="flex items-center gap-4">
+              <CurrencySelector />
               <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
                 <span className="text-sm font-medium">JD</span>
               </div>
