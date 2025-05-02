@@ -1,4 +1,3 @@
-
 import { 
   LineChart, 
   Line, 
@@ -18,9 +17,33 @@ import { ChartBar } from "@/components/Dashboard/BarChart";
 import { ChartPie } from "@/components/Dashboard/PieChart";
 import { useAppContext } from "@/lib/AppContext";
 import { getTotalExpenses, getSpendingByCategory } from "@/lib/mockData";
+import { Button } from "@/components/ui/button";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useState } from "react";
+import { toast } from "sonner";
+import { FileText, FileExcel } from "lucide-react";
 
 const Analytics = () => {
   const { formatCurrency } = useAppContext();
+  const [exportFormat, setExportFormat] = useState("pdf");
+  const [exportSection, setExportSection] = useState("all");
   
   // Mock data for line chart
   const trendData = [
@@ -60,11 +83,89 @@ const Analytics = () => {
     return formatCurrency(isNaN(numValue) ? 0 : numValue);
   };
 
+  // Function to handle export
+  const handleExport = () => {
+    // In a real application, this would generate the actual export
+    let formatName = "";
+    switch(exportFormat) {
+      case "pdf":
+        formatName = "PDF";
+        break;
+      case "excel":
+        formatName = "Excel";
+        break;
+      case "sheets":
+        formatName = "Google Sheets";
+        break;
+    }
+    
+    toast.success(`Report exported to ${formatName} successfully!`);
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
-        <p className="text-muted-foreground">Gain insights from your financial data</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+          <p className="text-muted-foreground">Gain insights from your financial data</p>
+        </div>
+        
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" className="flex gap-2 items-center">
+              <FileText className="h-4 w-4" />
+              Export Report
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Export Report</AlertDialogTitle>
+              <AlertDialogDescription>
+                Choose a format to export your financial reports.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="export-format" className="text-right">Format</label>
+                <div className="col-span-3">
+                  <Select value={exportFormat} onValueChange={setExportFormat}>
+                    <SelectTrigger id="export-format">
+                      <SelectValue placeholder="Select Format" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pdf">PDF Document</SelectItem>
+                      <SelectItem value="excel">Excel Spreadsheet</SelectItem>
+                      <SelectItem value="sheets">Google Sheets</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="export-section" className="text-right">Section</label>
+                <div className="col-span-3">
+                  <Select value={exportSection} onValueChange={setExportSection}>
+                    <SelectTrigger id="export-section">
+                      <SelectValue placeholder="Select Section" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Reports</SelectItem>
+                      <SelectItem value="trends">Income vs Expenses</SelectItem>
+                      <SelectItem value="savings">Savings Trend</SelectItem>
+                      <SelectItem value="categories">Expense Categories</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleExport}>Export</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       <Tabs defaultValue="trends" className="space-y-4">
