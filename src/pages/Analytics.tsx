@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/select";
 import { useState } from "react";
 import { toast } from "sonner";
-import { FileText, FileExcel } from "lucide-react";
+import { FileText, FileSpreadsheet } from "lucide-react";
 
 const Analytics = () => {
   const { formatCurrency } = useAppContext();
