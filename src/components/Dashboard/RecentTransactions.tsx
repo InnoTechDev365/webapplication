@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useAppContext } from "@/lib/AppContext";
 
 interface RecentTransactionsProps {
   transactions: Transaction[];
@@ -17,6 +18,8 @@ interface RecentTransactionsProps {
 }
 
 export function RecentTransactions({ transactions, getCategoryById }: RecentTransactionsProps) {
+  const { formatCurrency } = useAppContext();
+  
   // Get the 5 most recent transactions
   const recentTransactions = [...transactions]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -60,7 +63,7 @@ export function RecentTransactions({ transactions, getCategoryById }: RecentTran
                     )}
                   >
                     {transaction.type === 'income' ? '+' : '-'}
-                    ${transaction.amount.toFixed(2)}
+                    {formatCurrency(transaction.amount).replace('-', '')}
                   </TableCell>
                 </TableRow>
               );

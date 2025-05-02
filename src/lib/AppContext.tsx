@@ -11,6 +11,7 @@ interface AppContextType {
   connectToSupabase: () => void;
   disconnectFromSupabase: () => void;
   availableCurrencies: string[];
+  formatCurrency: (amount: number) => string;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -53,17 +54,28 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     toast.success(`Currency changed to ${currency}`);
   };
 
+  const formatCurrency = (amount: number): string => {
+    const formatter = new Intl.NumberFormat(navigator.language || 'en-US', {
+      style: 'currency',
+      currency: settings.currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    
+    return formatter.format(amount);
+  };
+
   const connectToSupabase = () => {
-    // This would normally connect to Supabase
+    // This would normally connect to Supabase and authenticate user
     storageManager.connectToSupabase(true);
     setIsSupabaseConnected(true);
-    toast.success('Connected to Supabase');
+    toast.success('Signed in successfully');
   };
 
   const disconnectFromSupabase = () => {
     storageManager.connectToSupabase(false);
     setIsSupabaseConnected(false);
-    toast.success('Disconnected from Supabase');
+    toast.success('Signed out successfully');
   };
 
   return (
@@ -74,7 +86,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         isSupabaseConnected,
         connectToSupabase,
         disconnectFromSupabase,
-        availableCurrencies
+        availableCurrencies,
+        formatCurrency
       }}
     >
       {children}

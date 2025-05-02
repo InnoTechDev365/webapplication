@@ -6,6 +6,7 @@ import { StatCard } from "@/components/Dashboard/StatCard";
 import { RecentTransactions } from "@/components/Dashboard/RecentTransactions";
 import { ChartPie } from "@/components/Dashboard/PieChart";
 import { ChartBar } from "@/components/Dashboard/BarChart";
+import { useAppContext } from "@/lib/AppContext";
 import { 
   mockTransactions, 
   getCategoryById,
@@ -16,6 +17,7 @@ import {
 } from "@/lib/mockData";
 
 const Dashboard = () => {
+  const { formatCurrency } = useAppContext();
   const totalIncome = getTotalIncome();
   const totalExpenses = getTotalExpenses();
   const balance = getBalance();
@@ -55,21 +57,21 @@ const Dashboard = () => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <StatCard
           title="Total Income"
-          value={`$${totalIncome.toFixed(2)}`}
+          value={formatCurrency(totalIncome)}
           icon={<PiggyBank className="h-4 w-4 text-primary" />}
           change="+12% from last month"
           changeType="positive"
         />
         <StatCard
           title="Total Expenses"
-          value={`$${totalExpenses.toFixed(2)}`}
+          value={formatCurrency(totalExpenses)}
           icon={<Wallet className="h-4 w-4 text-primary" />}
           change="+5% from last month"
           changeType="negative"
         />
         <StatCard
           title="Current Balance"
-          value={`$${balance.toFixed(2)}`}
+          value={formatCurrency(balance)}
           icon={<TrendingUp className="h-4 w-4 text-primary" />}
           change="+2.5% from last month"
           changeType="positive"
@@ -88,7 +90,7 @@ const Dashboard = () => {
             <ChartPie 
               data={pieChartData} 
               title="Expense Breakdown" 
-              total={`$${totalExpenses.toFixed(2)}`}
+              total={formatCurrency(totalExpenses)}
             />
             <ChartBar 
               data={barChartData} 

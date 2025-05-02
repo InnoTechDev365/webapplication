@@ -1,6 +1,7 @@
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAppContext } from '@/lib/AppContext';
 
 interface IncomeExpenseData {
   name: string;
@@ -14,7 +15,7 @@ interface IncomeExpenseChartProps {
 }
 
 export function ChartBar({ data, title }: IncomeExpenseChartProps) {
-  const formatCurrency = (value: number) => `$${value.toFixed(2)}`;
+  const { formatCurrency } = useAppContext();
   
   return (
     <Card>
@@ -35,8 +36,8 @@ export function ChartBar({ data, title }: IncomeExpenseChartProps) {
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
-              <YAxis tickFormatter={formatCurrency} />
-              <Tooltip formatter={(value: number) => [`$${value.toFixed(2)}`, '']} />
+              <YAxis tickFormatter={(value) => formatCurrency(value)} />
+              <Tooltip formatter={(value: number) => [formatCurrency(value), '']} />
               <Legend />
               <Bar dataKey="income" name="Income" fill="#10B981" />
               <Bar dataKey="expenses" name="Expenses" fill="#EF4444" />

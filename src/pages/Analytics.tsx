@@ -15,9 +15,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChartBar } from "@/components/Dashboard/BarChart";
 import { ChartPie } from "@/components/Dashboard/PieChart";
+import { useAppContext } from "@/lib/AppContext";
 import { getTotalExpenses, getSpendingByCategory } from "@/lib/mockData";
 
 const Analytics = () => {
+  const { formatCurrency } = useAppContext();
+  
   // Mock data for line chart
   const trendData = [
     { name: 'Jan', income: 4000, expenses: 2400 },
@@ -77,8 +80,8 @@ const Analytics = () => {
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip formatter={(value) => `$${value}`} />
+                    <YAxis tickFormatter={(value) => formatCurrency(value)} />
+                    <Tooltip formatter={(value) => formatCurrency(value)} />
                     <Legend />
                     <Line 
                       type="monotone" 
@@ -120,8 +123,8 @@ const Analytics = () => {
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip formatter={(value) => `$${value}`} />
+                    <YAxis tickFormatter={(value) => formatCurrency(value)} />
+                    <Tooltip formatter={(value) => formatCurrency(value)} />
                     <Area 
                       type="monotone" 
                       dataKey="amount" 
@@ -148,7 +151,7 @@ const Analytics = () => {
           <ChartPie 
             data={pieChartData} 
             title="Expense Breakdown" 
-            total={`$${totalExpenses.toFixed(2)}`}
+            total={formatCurrency(totalExpenses)}
           />
         </TabsContent>
       </Tabs>

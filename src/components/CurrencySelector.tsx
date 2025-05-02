@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useAppContext } from '@/lib/AppContext';
+import { DollarSign } from 'lucide-react';
 import {
   Select,
   SelectContent,

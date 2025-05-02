@@ -10,7 +10,7 @@ export function SupabaseConnector() {
   return (
     <div className="rounded-lg bg-white/10 p-4 text-white text-center">
       <p className="text-sm mb-2">
-        {isSupabaseConnected ? 'Connected to Supabase' : 'Connect your Supabase'}
+        {isSupabaseConnected ? 'User Authenticated' : 'Sign in with Supabase'}
       </p>
       <Button
         variant="outline"
@@ -19,7 +19,7 @@ export function SupabaseConnector() {
         onClick={isSupabaseConnected ? disconnectFromSupabase : connectToSupabase}
       >
         <Database className="mr-2 h-4 w-4" />
-        {isSupabaseConnected ? 'Disconnect' : 'Connect'}
+        {isSupabaseConnected ? 'Sign Out' : 'Sign In'}
       </Button>
     </div>
   );

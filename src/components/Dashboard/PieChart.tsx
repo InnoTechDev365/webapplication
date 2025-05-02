@@ -1,6 +1,7 @@
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAppContext } from '@/lib/AppContext';
 
 interface PieChartData {
   name: string;
@@ -15,6 +16,8 @@ interface ExpensePieChartProps {
 }
 
 export function ChartPie({ data, title, total }: ExpensePieChartProps) {
+  const { formatCurrency } = useAppContext();
+  
   const renderCustomizedLabel = ({ 
     cx, 
     cy, 
@@ -67,7 +70,7 @@ export function ChartPie({ data, title, total }: ExpensePieChartProps) {
                 ))}
               </Pie>
               <Tooltip 
-                formatter={(value: number) => `$${value.toFixed(2)}`}
+                formatter={(value: number) => formatCurrency(value)}
               />
               <Legend />
             </PieChart>
