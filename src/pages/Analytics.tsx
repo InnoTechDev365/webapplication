@@ -9,7 +9,8 @@ import {
   CartesianGrid, 
   Tooltip, 
   Legend, 
-  ResponsiveContainer 
+  ResponsiveContainer,
+  TooltipProps
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -52,6 +53,13 @@ const Analytics = () => {
     { name: 'Jul', amount: 1190 },
   ];
 
+  // Custom formatter function to convert values to numbers before formatting
+  const currencyFormatter = (value: any): string => {
+    // Ensure the value is a number
+    const numValue = typeof value === 'string' ? parseFloat(value) : Number(value);
+    return formatCurrency(isNaN(numValue) ? 0 : numValue);
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
@@ -80,8 +88,8 @@ const Analytics = () => {
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
-                    <YAxis tickFormatter={(value) => formatCurrency(value)} />
-                    <Tooltip formatter={(value) => formatCurrency(value)} />
+                    <YAxis tickFormatter={currencyFormatter} />
+                    <Tooltip formatter={currencyFormatter} />
                     <Legend />
                     <Line 
                       type="monotone" 
@@ -123,8 +131,8 @@ const Analytics = () => {
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
-                    <YAxis tickFormatter={(value) => formatCurrency(value)} />
-                    <Tooltip formatter={(value) => formatCurrency(value)} />
+                    <YAxis tickFormatter={currencyFormatter} />
+                    <Tooltip formatter={currencyFormatter} />
                     <Area 
                       type="monotone" 
                       dataKey="amount" 
