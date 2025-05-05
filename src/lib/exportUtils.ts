@@ -2,113 +2,252 @@
 /**
  * Utility functions for exporting financial data
  */
+import { toast } from "sonner";
 
 /**
- * Export data to PDF format
+ * Export data to PDF format with improved formatting
  * @param data Data to export
  * @param title Title of the document
  */
 export const exportToPdf = (data: any, title: string) => {
   console.log('Exporting to PDF:', { data, title });
   
-  // In a real application, this would use a PDF generation library like pdfmake or jspdf
-  // For demonstration purposes, we'll create a download link with dummy content
-  
-  // Create a Blob containing dummy PDF content
-  const blob = new Blob(
-    [`%PDF-1.5\n1 0 obj\n<</Type /Catalog>>\nendobj\n2 0 obj\n<</Length 44>>\nstream\nBT\n/F1 12 Tf\n100 700 Td\n(${title}) Tj\nET\nendstream\nendobj\nxref\n0 3\n0000000000 65535 f\n0000000015 00000 n\n0000000051 00000 n\ntrailer\n<</Size 3>>\nstartxref\n144\n%%EOF\n`],
-    { type: 'application/pdf' }
-  );
-  
-  // Create a download link
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${title.replace(/\s+/g, '_')}.pdf`;
-  
-  // Trigger the download
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  
-  // Clean up
-  URL.revokeObjectURL(url);
+  try {
+    // In a real application, this would use a PDF generation library like pdfmake or jspdf
+    // For demonstration purposes, we'll create a download link with dummy content
+    
+    // Create a Blob containing dummy PDF content with better formatting
+    const pdfContent = `%PDF-1.5
+1 0 obj
+<</Type /Catalog /Pages 2 0 R>>
+endobj
+2 0 obj
+<</Type /Pages /Kids [3 0 R] /Count 1>>
+endobj
+3 0 obj
+<</Type /Page /Parent 2 0 R /Resources 4 0 R /MediaBox [0 0 612 792] /Contents 6 0 R>>
+endobj
+4 0 obj
+<</Font <</F1 5 0 R>>>>
+endobj
+5 0 obj
+<</Type /Font /Subtype /Type1 /BaseFont /Helvetica>>
+endobj
+6 0 obj
+<</Length 200>>
+stream
+BT
+/F1 16 Tf
+50 700 Td
+(${title}) Tj
+/F1 12 Tf
+0 -40 Td
+(Financial Report - Generated on ${new Date().toLocaleDateString()}) Tj
+0 -20 Td
+(This is a sample financial report export) Tj
+ET
+endstream
+endobj
+xref
+0 7
+0000000000 65535 f
+0000000009 00000 n
+0000000056 00000 n
+0000000111 00000 n
+0000000212 00000 n
+0000000250 00000 n
+0000000317 00000 n
+trailer
+<</Size 7 /Root 1 0 R>>
+startxref
+520
+%%EOF
+`;
+    
+    const blob = new Blob([pdfContent], { type: 'application/pdf' });
+    
+    // Create a download link
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+    
+    // Trigger the download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Clean up
+    URL.revokeObjectURL(url);
+    toast.success("PDF export completed successfully");
+  } catch (error) {
+    console.error("PDF Export failed:", error);
+    toast.error("Failed to export PDF");
+  }
 };
 
 /**
- * Export data to Excel format
+ * Export data to Excel format with improved data formatting
  * @param data Data to export
  * @param title Title of the document
  */
 export const exportToExcel = (data: any, title: string) => {
   console.log('Exporting to Excel:', { data, title });
   
-  // In a real application, this would use a library like exceljs or xlsx
-  // For demonstration purposes, we'll create a CSV file which can be opened in Excel
-  
-  let csvContent = "";
-  
-  // Convert data to CSV
-  if (Array.isArray(data)) {
-    // Add headers
-    const headers = Object.keys(data[0] || {}).join(',');
-    csvContent += headers + '\n';
+  try {
+    // In a real application, this would use a library like exceljs or xlsx
+    // For demonstration purposes, we'll create a CSV file which can be opened in Excel
     
-    // Add rows
-    data.forEach(item => {
-      const row = Object.values(item).join(',');
-      csvContent += row + '\n';
-    });
-  } else {
-    // Multiple datasets
-    for (const [key, value] of Object.entries(data)) {
-      csvContent += `${key}\n`;
+    let csvContent = "";
+    
+    // Add metadata
+    csvContent += `# ${title}\n`;
+    csvContent += `# Generated: ${new Date().toISOString()}\n\n`;
+    
+    // Convert data to CSV
+    if (Array.isArray(data)) {
+      // Add headers
+      const headers = Object.keys(data[0] || {}).join(',');
+      csvContent += headers + '\n';
       
-      if (Array.isArray(value)) {
-        // Add headers
-        const headers = Object.keys(value[0] || {}).join(',');
-        csvContent += headers + '\n';
+      // Add rows
+      data.forEach(item => {
+        const row = Object.values(item).map(value => {
+          // Handle special cases for CSV formatting
+          if (value === null || value === undefined) return '';
+          if (typeof value === 'string') return `"${value.replace(/"/g, '""')}"`;
+          if (typeof value === 'object') return `"${JSON.stringify(value).replace(/"/g, '""')}"`;
+          return value;
+        }).join(',');
+        csvContent += row + '\n';
+      });
+    } else if (typeof data === 'object' && data !== null) {
+      // Handle multiple datasets or object structure
+      for (const [key, value] of Object.entries(data)) {
+        csvContent += `## ${key}\n`;
         
-        // Add rows
-        value.forEach((item: any) => {
-          const row = Object.values(item).join(',');
-          csvContent += row + '\n';
-        });
+        if (Array.isArray(value) && value.length > 0) {
+          // Add headers
+          const headers = Object.keys(value[0] || {}).join(',');
+          csvContent += headers + '\n';
+          
+          // Add rows
+          value.forEach((item: any) => {
+            const row = Object.values(item).map(cellValue => {
+              if (cellValue === null || cellValue === undefined) return '';
+              if (typeof cellValue === 'string') return `"${cellValue.replace(/"/g, '""')}"`;
+              if (typeof cellValue === 'object') return `"${JSON.stringify(cellValue).replace(/"/g, '""')}"`;
+              return cellValue;
+            }).join(',');
+            csvContent += row + '\n';
+          });
+        }
+        
+        csvContent += '\n';
       }
-      
-      csvContent += '\n';
     }
+    
+    // Create a Blob containing the CSV data
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // Create a download link
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
+    
+    // Trigger the download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Clean up
+    URL.revokeObjectURL(url);
+    toast.success("Excel export completed successfully");
+  } catch (error) {
+    console.error("Excel Export failed:", error);
+    toast.error("Failed to export Excel file");
   }
-  
-  // Create a Blob containing the CSV data
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  
-  // Create a download link
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${title.replace(/\s+/g, '_')}.csv`;
-  
-  // Trigger the download
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  
-  // Clean up
-  URL.revokeObjectURL(url);
 };
 
 /**
- * Export data to Google Sheets format
+ * Export data to Google Sheets format with improved compatibility
  * @param data Data to export
  * @param title Title of the document
  */
 export const exportToSheets = (data: any, title: string) => {
   console.log('Exporting to Google Sheets:', { data, title });
   
-  // Google Sheets can open CSV files, so we'll use the same method as Excel
-  exportToExcel(data, title + "_sheets");
-  
-  // In a real application, this would use the Google Sheets API
-  // to create a new sheet and populate it with the data
+  try {
+    // Google Sheets can open CSV files, so we'll generate a compatible format
+    let csvContent = "";
+    
+    // Add metadata for Google Sheets
+    csvContent += `${title}\n`;
+    csvContent += `Generated: ${new Date().toLocaleDateString()}\n\n`;
+    
+    // Convert data to CSV with Google Sheets compatibility
+    if (Array.isArray(data)) {
+      // Add headers
+      const headers = Object.keys(data[0] || {}).join(',');
+      csvContent += headers + '\n';
+      
+      // Add rows
+      data.forEach(item => {
+        const row = Object.values(item).map(value => {
+          // Handle special cases for Google Sheets
+          if (value === null || value === undefined) return '';
+          if (typeof value === 'string') return `"${value.replace(/"/g, '""')}"`;
+          if (typeof value === 'object') return `"${JSON.stringify(value).replace(/"/g, '""')}"`;
+          return value;
+        }).join(',');
+        csvContent += row + '\n';
+      });
+    } else if (typeof data === 'object' && data !== null) {
+      // Handle multiple datasets with sheet-like structure
+      for (const [key, value] of Object.entries(data)) {
+        csvContent += `${key}\n`;
+        
+        if (Array.isArray(value) && value.length > 0) {
+          // Add headers
+          const headers = Object.keys(value[0] || {}).join(',');
+          csvContent += headers + '\n';
+          
+          // Add rows
+          value.forEach((item: any) => {
+            const row = Object.values(item).map(cellValue => {
+              if (cellValue === null || cellValue === undefined) return '';
+              if (typeof cellValue === 'string') return `"${cellValue.replace(/"/g, '""')}"`;
+              if (typeof cellValue === 'object') return `"${JSON.stringify(cellValue).replace(/"/g, '""')}"`;
+              return cellValue;
+            }).join(',');
+            csvContent += row + '\n';
+          });
+        }
+        
+        csvContent += '\n\n';
+      }
+    }
+    
+    // Create a Blob containing the CSV data
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // Create a download link
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${title.replace(/\s+/g, '_')}_sheets_${new Date().toISOString().split('T')[0]}.csv`;
+    
+    // Trigger the download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Clean up
+    URL.revokeObjectURL(url);
+    toast.success("Google Sheets export completed successfully");
+  } catch (error) {
+    console.error("Google Sheets Export failed:", error);
+    toast.error("Failed to export to Google Sheets format");
+  }
 };
