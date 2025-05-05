@@ -5,7 +5,7 @@
 import { toast } from "sonner";
 
 /**
- * Export data to PDF format with improved formatting
+ * Export data to PDF format with cross-browser compatibility
  * @param data Data to export
  * @param title Title of the document
  */
@@ -65,20 +65,7 @@ startxref
 `;
     
     const blob = new Blob([pdfContent], { type: 'application/pdf' });
-    
-    // Create a download link
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
-    
-    // Trigger the download
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    // Clean up
-    URL.revokeObjectURL(url);
+    downloadFile(blob, `${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
     toast.success("PDF export completed successfully");
   } catch (error) {
     console.error("PDF Export failed:", error);
@@ -87,7 +74,7 @@ startxref
 };
 
 /**
- * Export data to Excel format with improved data formatting
+ * Export data to Excel format with cross-browser compatibility
  * @param data Data to export
  * @param title Title of the document
  */
@@ -149,20 +136,7 @@ export const exportToExcel = (data: any, title: string) => {
     
     // Create a Blob containing the CSV data
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    
-    // Create a download link
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
-    
-    // Trigger the download
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    // Clean up
-    URL.revokeObjectURL(url);
+    downloadFile(blob, `${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`);
     toast.success("Excel export completed successfully");
   } catch (error) {
     console.error("Excel Export failed:", error);
@@ -171,83 +145,25 @@ export const exportToExcel = (data: any, title: string) => {
 };
 
 /**
- * Export data to Google Sheets format with improved compatibility
- * @param data Data to export
- * @param title Title of the document
+ * Helper function to download a file in a cross-browser compatible way
+ * @param blob The Blob containing file data
+ * @param filename The name to save the file as
  */
-export const exportToSheets = (data: any, title: string) => {
-  console.log('Exporting to Google Sheets:', { data, title });
+function downloadFile(blob: Blob, filename: string) {
+  // Create a download link
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.style.display = 'none';
   
-  try {
-    // Google Sheets can open CSV files, so we'll generate a compatible format
-    let csvContent = "";
-    
-    // Add metadata for Google Sheets
-    csvContent += `${title}\n`;
-    csvContent += `Generated: ${new Date().toLocaleDateString()}\n\n`;
-    
-    // Convert data to CSV with Google Sheets compatibility
-    if (Array.isArray(data)) {
-      // Add headers
-      const headers = Object.keys(data[0] || {}).join(',');
-      csvContent += headers + '\n';
-      
-      // Add rows
-      data.forEach(item => {
-        const row = Object.values(item).map(value => {
-          // Handle special cases for Google Sheets
-          if (value === null || value === undefined) return '';
-          if (typeof value === 'string') return `"${value.replace(/"/g, '""')}"`;
-          if (typeof value === 'object') return `"${JSON.stringify(value).replace(/"/g, '""')}"`;
-          return value;
-        }).join(',');
-        csvContent += row + '\n';
-      });
-    } else if (typeof data === 'object' && data !== null) {
-      // Handle multiple datasets with sheet-like structure
-      for (const [key, value] of Object.entries(data)) {
-        csvContent += `${key}\n`;
-        
-        if (Array.isArray(value) && value.length > 0) {
-          // Add headers
-          const headers = Object.keys(value[0] || {}).join(',');
-          csvContent += headers + '\n';
-          
-          // Add rows
-          value.forEach((item: any) => {
-            const row = Object.values(item).map(cellValue => {
-              if (cellValue === null || cellValue === undefined) return '';
-              if (typeof cellValue === 'string') return `"${cellValue.replace(/"/g, '""')}"`;
-              if (typeof cellValue === 'object') return `"${JSON.stringify(cellValue).replace(/"/g, '""')}"`;
-              return cellValue;
-            }).join(',');
-            csvContent += row + '\n';
-          });
-        }
-        
-        csvContent += '\n\n';
-      }
-    }
-    
-    // Create a Blob containing the CSV data
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    
-    // Create a download link
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${title.replace(/\s+/g, '_')}_sheets_${new Date().toISOString().split('T')[0]}.csv`;
-    
-    // Trigger the download
-    document.body.appendChild(link);
-    link.click();
+  // Append to the DOM, trigger download, and clean up
+  document.body.appendChild(link);
+  link.click();
+  
+  // Clean up after a short delay to ensure download starts
+  setTimeout(() => {
     document.body.removeChild(link);
-    
-    // Clean up
     URL.revokeObjectURL(url);
-    toast.success("Google Sheets export completed successfully");
-  } catch (error) {
-    console.error("Google Sheets Export failed:", error);
-    toast.error("Failed to export to Google Sheets format");
-  }
-};
+  }, 100);
+}

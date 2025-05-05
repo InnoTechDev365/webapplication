@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-import { exportToPdf, exportToExcel, exportToSheets } from "@/lib/exportUtils";
+import { exportToPdf, exportToExcel } from "@/lib/exportUtils";
 import { toast } from "sonner";
 
 interface ExportDialogProps {
@@ -74,9 +74,6 @@ export const ExportDialog = ({ trendData, savingsData, pieChartData }: ExportDia
         case "excel":
           exportToExcel(dataToExport, title);
           break;
-        case "sheets":
-          exportToSheets(dataToExport, title);
-          break;
       }
       
       toast.success(`Report exported to ${exportFormat.toUpperCase()} successfully!`);
@@ -93,7 +90,7 @@ export const ExportDialog = ({ trendData, savingsData, pieChartData }: ExportDia
           Export Report
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent className="max-w-md w-full">
         <AlertDialogHeader>
           <AlertDialogTitle>Export Report</AlertDialogTitle>
           <AlertDialogDescription>
@@ -103,7 +100,7 @@ export const ExportDialog = ({ trendData, savingsData, pieChartData }: ExportDia
         
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <label htmlFor="export-format" className="text-right">Format</label>
+            <label htmlFor="export-format" className="text-right sm:text-left">Format</label>
             <div className="col-span-3">
               <Select value={exportFormat} onValueChange={setExportFormat}>
                 <SelectTrigger id="export-format">
@@ -112,14 +109,13 @@ export const ExportDialog = ({ trendData, savingsData, pieChartData }: ExportDia
                 <SelectContent>
                   <SelectItem value="pdf">PDF Document</SelectItem>
                   <SelectItem value="excel">Excel Spreadsheet</SelectItem>
-                  <SelectItem value="sheets">Google Sheets</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           
           <div className="grid grid-cols-4 items-center gap-4">
-            <label htmlFor="export-section" className="text-right">Section</label>
+            <label htmlFor="export-section" className="text-right sm:text-left">Section</label>
             <div className="col-span-3">
               <Select value={exportSection} onValueChange={setExportSection}>
                 <SelectTrigger id="export-section">
@@ -136,7 +132,7 @@ export const ExportDialog = ({ trendData, savingsData, pieChartData }: ExportDia
           </div>
         </div>
         
-        <AlertDialogFooter>
+        <AlertDialogFooter className="sm:justify-end">
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction onClick={handleExport}>Export</AlertDialogAction>
         </AlertDialogFooter>

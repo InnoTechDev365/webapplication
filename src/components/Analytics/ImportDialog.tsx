@@ -12,7 +12,7 @@ import {
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Upload } from "lucide-react";
+import { Upload, FilePdf, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +26,15 @@ export const ImportDialog = () => {
   const handleImport = () => {
     if (!importFile) {
       toast.error("Please select a file to import");
+      return;
+    }
+
+    // Get file extension
+    const fileExtension = importFile.name.split('.').pop()?.toLowerCase();
+    
+    // Check if the file is in the right format
+    if (!['pdf', 'xlsx', 'xls', 'csv'].includes(fileExtension || '')) {
+      toast.error("Please select a PDF or Excel file");
       return;
     }
 
@@ -45,6 +54,21 @@ export const ImportDialog = () => {
     }
   };
 
+  // Function to render file icon based on file type
+  const renderFileIcon = () => {
+    if (!importFile) return null;
+    
+    const fileExtension = importFile.name.split('.').pop()?.toLowerCase();
+    
+    if (fileExtension === 'pdf') {
+      return <FilePdf className="h-6 w-6 text-red-500" />;
+    } else if (['xlsx', 'xls', 'csv'].includes(fileExtension || '')) {
+      return <FileSpreadsheet className="h-6 w-6 text-green-500" />;
+    }
+    
+    return null;
+  };
+
   return (
     <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
       <AlertDialogTrigger asChild>
@@ -53,11 +77,11 @@ export const ImportDialog = () => {
           Import Data
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent className="max-w-md w-full">
         <AlertDialogHeader>
           <AlertDialogTitle>Import Financial Data</AlertDialogTitle>
           <AlertDialogDescription>
-            Choose a file to import your financial data from.
+            Choose a PDF or Excel file to import your financial data from.
           </AlertDialogDescription>
         </AlertDialogHeader>
         
@@ -68,18 +92,20 @@ export const ImportDialog = () => {
               ref={fileInputRef}
               id="file-upload"
               type="file"
-              accept=".xlsx,.xls,.csv,.pdf,.json"
+              accept=".xlsx,.xls,.csv,.pdf"
               onChange={handleFileChange}
+              className="cursor-pointer file:cursor-pointer"
             />
             {importFile && (
-              <p className="text-sm text-muted-foreground">
-                Selected file: {importFile.name}
-              </p>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                {renderFileIcon()}
+                <span>Selected file: {importFile.name}</span>
+              </div>
             )}
           </div>
         </div>
         
-        <AlertDialogFooter>
+        <AlertDialogFooter className="sm:justify-end">
           <AlertDialogCancel onClick={() => setImportFile(null)}>Cancel</AlertDialogCancel>
           <AlertDialogAction onClick={handleImport}>Import</AlertDialogAction>
         </AlertDialogFooter>
