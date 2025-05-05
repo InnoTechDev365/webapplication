@@ -39,14 +39,14 @@ export function SupabaseConnector() {
 
   return (
     <>
-      <div className="rounded-lg bg-sidebar-accent p-4 text-white text-center">
-        <p className="text-sm mb-2 font-medium">
+      <div className="rounded-lg bg-sidebar-accent p-4 shadow-md">
+        <p className="text-sm mb-2 font-medium text-white">
           {isSupabaseConnected ? 'User Authenticated' : 'Sign in with Supabase'}
         </p>
         <Button
           variant="outline"
           size="sm"
-          className="w-full text-white border-white bg-sidebar-background hover:bg-white hover:text-sidebar-background"
+          className="w-full bg-white text-sidebar-background border-white hover:bg-sidebar-accent hover:text-white hover:border-white transition-colors"
           onClick={openAuthDialog}
         >
           {isSupabaseConnected ? (
