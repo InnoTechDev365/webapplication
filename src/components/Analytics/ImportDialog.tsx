@@ -12,7 +12,7 @@ import {
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Upload, FilePdf, FileSpreadsheet } from "lucide-react";
+import { Upload, FileText, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,7 +61,7 @@ export const ImportDialog = () => {
     const fileExtension = importFile.name.split('.').pop()?.toLowerCase();
     
     if (fileExtension === 'pdf') {
-      return <FilePdf className="h-6 w-6 text-red-500" />;
+      return <FileText className="h-6 w-6 text-red-500" />;
     } else if (['xlsx', 'xls', 'csv'].includes(fileExtension || '')) {
       return <FileSpreadsheet className="h-6 w-6 text-green-500" />;
     }
