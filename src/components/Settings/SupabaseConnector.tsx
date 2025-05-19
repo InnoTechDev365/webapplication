@@ -12,7 +12,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 
-export function SupabaseConnector() {
+export const SupabaseConnector = () => {
   const { isSupabaseConnected, connectToSupabase, disconnectFromSupabase } = useAppContext();
 
   const handleConnection = () => {
@@ -24,15 +24,19 @@ export function SupabaseConnector() {
   };
 
   return (
-    <div className="rounded-lg bg-sidebar-accent p-4 shadow-md">
-      <p className="text-sm mb-2 font-medium text-white">
+    <div>
+      <p className="font-medium mb-2">
         {isSupabaseConnected ? 'Connected to Supabase' : 'Connect to Supabase'}
       </p>
+      <p className="text-sm text-muted-foreground mb-4">
+        {isSupabaseConnected 
+          ? "Your data is currently stored in Supabase and locally" 
+          : "Your data is currently stored only in your browser"}
+      </p>
+      
       {isSupabaseConnected ? (
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full bg-white text-sidebar-background border-white hover:bg-sidebar-accent hover:text-white hover:border-white transition-colors"
+        <Button 
+          variant="outline" 
           onClick={disconnectFromSupabase}
         >
           <Database className="mr-2 h-4 w-4" />
@@ -41,11 +45,7 @@ export function SupabaseConnector() {
       ) : (
         <Sheet>
           <SheetTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full bg-white text-sidebar-background border-white hover:bg-sidebar-accent hover:text-white hover:border-white transition-colors"
-            >
+            <Button variant="outline">
               <LogIn className="mr-2 h-4 w-4" />
               Connect
             </Button>
@@ -90,4 +90,4 @@ export function SupabaseConnector() {
       )}
     </div>
   );
-}
+};
