@@ -1,15 +1,9 @@
 
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChartBar } from "@/components/Dashboard/BarChart";
-import { ChartPie } from "@/components/Dashboard/PieChart";
 import { useAppContext } from "@/lib/AppContext";
 import { getTotalExpenses, getSpendingByCategory } from "@/lib/mockData";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { IncomeExpenseTrend } from "@/components/Analytics/IncomeExpenseTrend";
-import { SavingsTrend } from "@/components/Analytics/SavingsTrend";
-import { ExportDialog } from "@/components/Analytics/ExportDialog";
-import { ImportDialog } from "@/components/Analytics/ImportDialog";
+import { AnalyticsActions } from "@/components/Analytics/AnalyticsActions";
+import { AnalyticsTabs } from "@/components/Analytics/AnalyticsTabs";
 
 const Analytics = () => {
   const { formatCurrency } = useAppContext();
@@ -54,43 +48,19 @@ const Analytics = () => {
           <p className="text-muted-foreground">Gain insights from your financial data</p>
         </div>
         
-        <div className="flex flex-wrap gap-2">
-          <ExportDialog
-            trendData={trendData}
-            savingsData={savingsData}
-            pieChartData={pieChartData}
-          />
-          <ImportDialog />
-        </div>
+        <AnalyticsActions 
+          trendData={trendData}
+          savingsData={savingsData}
+          pieChartData={pieChartData}
+        />
       </div>
 
-      <Tabs defaultValue="trends" className="space-y-4">
-        <TabsList className="flex flex-wrap">
-          <TabsTrigger value="trends">Trends</TabsTrigger>
-          <TabsTrigger value="comparison">Comparison</TabsTrigger>
-          <TabsTrigger value="categories">Categories</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="trends" className="space-y-4">
-          <IncomeExpenseTrend data={trendData} />
-          <SavingsTrend data={savingsData} />
-        </TabsContent>
-        
-        <TabsContent value="comparison" className="space-y-4">
-          <ChartBar 
-            data={trendData} 
-            title="Income vs. Expenses by Month" 
-          />
-        </TabsContent>
-        
-        <TabsContent value="categories" className="space-y-4">
-          <ChartPie 
-            data={pieChartData} 
-            title="Expense Breakdown" 
-            total={formatCurrency(totalExpenses)}
-          />
-        </TabsContent>
-      </Tabs>
+      <AnalyticsTabs 
+        trendData={trendData}
+        savingsData={savingsData}
+        pieChartData={pieChartData}
+        totalExpenses={totalExpenses}
+      />
     </div>
   );
 };

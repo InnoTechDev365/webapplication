@@ -1,0 +1,126 @@
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { 
+  Select, 
+  SelectTrigger, 
+  SelectValue, 
+  SelectContent, 
+  SelectItem 
+} from "@/components/ui/select";
+import { Plus } from "lucide-react";
+import { Transaction } from "@/lib/types";
+import { mockTransactions, getCategoryById } from "@/lib/mockData";
+
+interface ExpenseFormProps {
+  onAddExpense: (expense: Transaction) => void;
+}
+
+export const ExpenseForm = ({ onAddExpense }: ExpenseFormProps) => {
+  const [description, setDescription] = useState("");
+  const [amount, setAmount] = useState("");
+  const [category, setCategory] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Filter to only expense categories
+  const expenseCategories = mockTransactions
+    .map(t => getCategoryById(t.category))
+    .filter((cat) => cat && cat.type === 'expense')
+    .filter((cat, index, self) => 
+      index === self.findIndex((c) => c?.id === cat?.id)
+    );
+
+  const handleAddExpense = () => {
+    const newExpense: Transaction = {
+      id: `e${Math.random().toString(36).substring(2, 9)}`,
+      amount: parseFloat(amount),
+      description,
+      date: new Date().toISOString().split('T')[0],
+      category,
+      type: 'expense'
+    };
+
+    onAddExpense(newExpense);
+    setDialogOpen(false);
+    setDescription("");
+    setAmount("");
+    setCategory("");
+  };
+
+  return (
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <DialogTrigger asChild>
+        <Button className="flex items-center gap-1">
+          <Plus className="h-4 w-4" /> Add Expense
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add New Expense</DialogTitle>
+          <DialogDescription>
+            Record a new expense to track your spending
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Input 
+              id="description" 
+              placeholder="e.g., Grocery shopping"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="amount">Amount</Label>
+            <Input 
+              id="amount" 
+              type="number" 
+              placeholder="0.00"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger id="category">
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {expenseCategories.map((cat) => (
+                  cat && (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  )
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+            Cancel
+          </Button>
+          <Button type="button" onClick={handleAddExpense}>Add Expense</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
