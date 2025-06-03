@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useAppContext } from '@/lib/AppContext';
 import { Button } from '@/components/ui/button';
-import { Database, LogIn } from 'lucide-react';
+import { Database, Cloud, CloudOff } from 'lucide-react';
 import { SupabaseConnectionDialog } from './Settings/SupabaseConnectionDialog';
 
 export function SupabaseConnector() {
@@ -19,34 +19,40 @@ export function SupabaseConnector() {
 
   return (
     <div className="rounded-lg bg-sidebar-accent p-4 shadow-md">
-      <p className="text-sm mb-2 font-medium text-white">
-        {isSupabaseConnected ? 'Connected to Supabase' : 'Connect to Supabase'}
-      </p>
+      <div className="flex items-center gap-2 mb-2">
+        {isSupabaseConnected ? (
+          <Cloud className="h-4 w-4 text-green-400" />
+        ) : (
+          <CloudOff className="h-4 w-4 text-gray-400" />
+        )}
+        <p className="text-sm font-medium text-white">
+          {isSupabaseConnected ? 'Cloud Sync Active' : 'Connect to Cloud'}
+        </p>
+      </div>
       
       {isSupabaseConnected ? (
         <div className="space-y-2">
           <div className="text-xs text-white/80 mb-2">
-            ExpenseCoin App • Personal
+            Synced with Supabase • All devices
           </div>
           <Button
             variant="outline"
             size="sm"
-            className="w-full bg-white text-sidebar-background border-white hover:bg-sidebar-accent hover:text-white hover:border-white transition-colors"
+            className="w-full bg-white text-sidebar-background border-white hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-colors"
             onClick={handleDisconnect}
           >
-            <Database className="mr-2 h-4 w-4" />
+            <CloudOff className="mr-2 h-4 w-4" />
             Disconnect
           </Button>
         </div>
       ) : (
         <Button
-          variant="outline"
           size="sm"
-          className="w-full bg-white text-sidebar-background border-white hover:bg-sidebar-accent hover:text-white hover:border-white transition-colors"
+          className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white border-0"
           onClick={() => setShowConnectionDialog(true)}
         >
-          <LogIn className="mr-2 h-4 w-4" />
-          Connect
+          <Cloud className="mr-2 h-4 w-4" />
+          Enable Sync
         </Button>
       )}
 

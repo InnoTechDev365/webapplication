@@ -10,14 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Database, Building2, Folder } from 'lucide-react';
+import { Database, Loader2, CheckCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface SupabaseConnectionDialogProps {
   open: boolean;
@@ -25,223 +19,129 @@ interface SupabaseConnectionDialogProps {
   onConnect: () => void;
 }
 
-interface Organization {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-interface Project {
-  id: string;
-  name: string;
-  ref: string;
-}
-
 export const SupabaseConnectionDialog = ({ open, onOpenChange, onConnect }: SupabaseConnectionDialogProps) => {
-  const [step, setStep] = useState<'login' | 'organization' | 'project'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedOrg, setSelectedOrg] = useState<string>('');
-  const [selectedProject, setSelectedProject] = useState<string>('');
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
 
-  // Mock data - in real implementation, these would come from Supabase API
-  const mockOrganizations: Organization[] = [
-    { id: '1', name: 'Personal', slug: 'personal' },
-    { id: '2', name: 'Company Inc.', slug: 'company-inc' },
-    { id: '3', name: 'Startup LLC', slug: 'startup-llc' },
-  ];
+  const handleConnect = async () => {
+    if (!email || !password) {
+      toast.error('Please enter your email and password');
+      return;
+    }
 
-  const mockProjects: Project[] = [
-    { id: '1', name: 'ExpenseCoin App', ref: 'expense-coin-app' },
-    { id: '2', name: 'Analytics Dashboard', ref: 'analytics-dashboard' },
-    { id: '3', name: 'User Management', ref: 'user-management' },
-  ];
-
-  const handleLogin = () => {
-    if (email && password) {
-      setStep('organization');
+    setIsConnecting(true);
+    
+    // Simulate connection process
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      setIsConnected(true);
+      toast.success('Successfully connected to Supabase!');
+      
+      // Wait a moment to show success state
+      setTimeout(() => {
+        onConnect();
+        onOpenChange(false);
+        resetDialog();
+      }, 1500);
+      
+    } catch (error) {
+      toast.error('Failed to connect to Supabase');
+      setIsConnecting(false);
     }
   };
 
-  const handleOrganizationSelect = () => {
-    if (selectedOrg) {
-      setStep('project');
-    }
+  const resetDialog = () => {
+    setEmail('');
+    setPassword('');
+    setIsConnecting(false);
+    setIsConnected(false);
   };
 
-  const handleProjectSelect = () => {
-    if (selectedProject) {
-      onConnect();
+  const handleClose = () => {
+    if (!isConnecting) {
       onOpenChange(false);
-      // Reset dialog state
-      setStep('login');
-      setEmail('');
-      setPassword('');
-      setSelectedOrg('');
-      setSelectedProject('');
+      resetDialog();
     }
   };
-
-  const renderLoginStep = () => (
-    <>
-      <DialogHeader>
-        <DialogTitle className="flex items-center gap-2">
-          <Database className="h-5 w-5" />
-          Sign in to Supabase
-        </DialogTitle>
-        <DialogDescription>
-          Enter your Supabase credentials to connect your account
-        </DialogDescription>
-      </DialogHeader>
-      <div className="space-y-4 py-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="your@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        <Button 
-          onClick={handleLogin} 
-          className="w-full"
-          disabled={!email || !password}
-        >
-          Sign In
-        </Button>
-      </div>
-    </>
-  );
-
-  const renderOrganizationStep = () => (
-    <>
-      <DialogHeader>
-        <DialogTitle className="flex items-center gap-2">
-          <Building2 className="h-5 w-5" />
-          Select Organization
-        </DialogTitle>
-        <DialogDescription>
-          Choose the organization you want to connect to
-        </DialogDescription>
-      </DialogHeader>
-      <div className="space-y-4 py-4">
-        <div className="space-y-2">
-          <Label>Organization</Label>
-          <Select value={selectedOrg} onValueChange={setSelectedOrg}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select an organization" />
-            </SelectTrigger>
-            <SelectContent>
-              {mockOrganizations.map((org) => (
-                <SelectItem key={org.id} value={org.id}>
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4" />
-                    {org.name}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            onClick={() => setStep('login')}
-            className="flex-1"
-          >
-            Back
-          </Button>
-          <Button 
-            onClick={handleOrganizationSelect}
-            disabled={!selectedOrg}
-            className="flex-1"
-          >
-            Continue
-          </Button>
-        </div>
-      </div>
-    </>
-  );
-
-  const renderProjectStep = () => (
-    <>
-      <DialogHeader>
-        <DialogTitle className="flex items-center gap-2">
-          <Folder className="h-5 w-5" />
-          Select Project
-        </DialogTitle>
-        <DialogDescription>
-          Choose the Supabase project to connect to ExpenseCoin
-        </DialogDescription>
-      </DialogHeader>
-      <div className="space-y-4 py-4">
-        <div className="space-y-2">
-          <Label>Project</Label>
-          <Select value={selectedProject} onValueChange={setSelectedProject}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select a project" />
-            </SelectTrigger>
-            <SelectContent>
-              {mockProjects.map((project) => (
-                <SelectItem key={project.id} value={project.id}>
-                  <div className="flex items-center gap-2">
-                    <Database className="h-4 w-4" />
-                    <div>
-                      <div className="font-medium">{project.name}</div>
-                      <div className="text-xs text-muted-foreground">{project.ref}</div>
-                    </div>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="rounded-md bg-muted p-3">
-          <div className="text-sm font-medium mb-1">Connection Details</div>
-          <div className="text-xs text-muted-foreground space-y-1">
-            <div>• Data will be synced between local storage and Supabase</div>
-            <div>• Existing local data will be uploaded to Supabase</div>
-            <div>• You can disconnect at any time</div>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            onClick={() => setStep('organization')}
-            className="flex-1"
-          >
-            Back
-          </Button>
-          <Button 
-            onClick={handleProjectSelect}
-            disabled={!selectedProject}
-            className="flex-1"
-          >
-            Connect Project
-          </Button>
-        </div>
-      </div>
-    </>
-  );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
-        {step === 'login' && renderLoginStep()}
-        {step === 'organization' && renderOrganizationStep()}
-        {step === 'project' && renderProjectStep()}
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            Connect to Supabase
+          </DialogTitle>
+          <DialogDescription>
+            Sign in to sync your data with Supabase. Your data will be stored both locally and in the cloud.
+          </DialogDescription>
+        </DialogHeader>
+        
+        {isConnected ? (
+          <div className="flex flex-col items-center justify-center py-8 space-y-4">
+            <CheckCircle className="h-12 w-12 text-green-500" />
+            <div className="text-center">
+              <h3 className="font-semibold text-lg">Connection Successful!</h3>
+              <p className="text-sm text-muted-foreground">Your data is now synced with Supabase</p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isConnecting}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isConnecting}
+              />
+            </div>
+            
+            <div className="rounded-md bg-blue-50 border border-blue-200 p-3">
+              <div className="text-sm text-blue-800 space-y-1">
+                <div className="font-medium">What happens when you connect:</div>
+                <div>• Your existing data will be uploaded to Supabase</div>
+                <div>• Future data will be saved both locally and in Supabase</div>
+                <div>• You can access your data from any device</div>
+              </div>
+            </div>
+            
+            <Button 
+              onClick={handleConnect} 
+              className="w-full"
+              disabled={!email || !password || isConnecting}
+            >
+              {isConnecting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                <>
+                  <Database className="mr-2 h-4 w-4" />
+                  Connect to Supabase
+                </>
+              )}
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
