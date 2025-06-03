@@ -1,26 +1,20 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppContext } from '@/lib/AppContext';
 import { Button } from '@/components/ui/button';
 import { Database, LogIn } from 'lucide-react';
-import { 
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
+import { SupabaseConnectionDialog } from './SupabaseConnectionDialog';
 
 export const SupabaseConnector = () => {
   const { isSupabaseConnected, connectToSupabase, disconnectFromSupabase } = useAppContext();
+  const [showConnectionDialog, setShowConnectionDialog] = useState(false);
 
-  const handleConnection = () => {
-    if (!isSupabaseConnected) {
-      connectToSupabase();
-    } else {
-      disconnectFromSupabase();
-    }
+  const handleConnect = () => {
+    connectToSupabase();
+  };
+
+  const handleDisconnect = () => {
+    disconnectFromSupabase();
   };
 
   return (
@@ -35,59 +29,41 @@ export const SupabaseConnector = () => {
       </p>
       
       {isSupabaseConnected ? (
+        <div className="space-y-3">
+          <div className="rounded-md bg-green-50 border border-green-200 p-3">
+            <div className="flex items-center gap-2 text-green-700">
+              <Database className="h-4 w-4" />
+              <span className="text-sm font-medium">Connected to ExpenseCoin App</span>
+            </div>
+            <div className="text-xs text-green-600 mt-1">
+              Organization: Personal • Project: expense-coin-app
+            </div>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={handleDisconnect}
+            className="w-full"
+          >
+            <Database className="mr-2 h-4 w-4" />
+            Disconnect
+          </Button>
+        </div>
+      ) : (
         <Button 
           variant="outline" 
-          onClick={disconnectFromSupabase}
+          onClick={() => setShowConnectionDialog(true)}
+          className="w-full"
         >
-          <Database className="mr-2 h-4 w-4" />
-          Disconnect
+          <LogIn className="mr-2 h-4 w-4" />
+          Connect to Supabase
         </Button>
-      ) : (
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline">
-              <LogIn className="mr-2 h-4 w-4" />
-              Connect
-            </Button>
-          </SheetTrigger>
-          <SheetContent className="w-[400px] sm:max-w-md">
-            <SheetHeader>
-              <SheetTitle>Connect to Supabase</SheetTitle>
-              <SheetDescription>
-                Connect to Supabase to enable cloud storage and synchronization across devices.
-              </SheetDescription>
-            </SheetHeader>
-            <div className="py-6 space-y-4">
-              <div className="rounded-md bg-muted p-4">
-                <div className="flex items-center space-x-4">
-                  <div className="rounded-full bg-primary/20 p-2">
-                    <Database className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium">ExpenseCoin & Supabase</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Your data will be synchronized between your browser and Supabase.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  When connected, your data will be:
-                </p>
-                <ul className="list-disc pl-5 text-sm space-y-1 text-muted-foreground">
-                  <li>Stored both locally and in Supabase</li>
-                  <li>Available across multiple devices</li>
-                  <li>Securely backed up in the cloud</li>
-                </ul>
-              </div>
-              <div className="flex justify-end pt-4">
-                <Button onClick={handleConnection}>Connect to Supabase</Button>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
       )}
+
+      <SupabaseConnectionDialog
+        open={showConnectionDialog}
+        onOpenChange={setShowConnectionDialog}
+        onConnect={handleConnect}
+      />
     </div>
   );
 };
