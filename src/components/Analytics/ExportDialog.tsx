@@ -19,9 +19,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, FileText, FileSpreadsheet, BarChart3 } from "lucide-react";
 import { exportToPdf, exportToExcel } from "@/lib/exportUtils";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 interface ExportDialogProps {
   trendData: any[];
@@ -31,7 +32,7 @@ interface ExportDialogProps {
 
 export const ExportDialog = ({ trendData, savingsData, pieChartData }: ExportDialogProps) => {
   const [exportFormat, setExportFormat] = useState("pdf");
-  const [exportSection, setExportSection] = useState("all");
+  const [exportSection, setExportSection] = useState("comprehensive");
   const [showDialog, setShowDialog] = useState(false);
 
   // Function to handle export
@@ -45,24 +46,24 @@ export const ExportDialog = ({ trendData, savingsData, pieChartData }: ExportDia
     switch(exportSection) {
       case "trends":
         dataToExport = trendData;
-        title = "Income vs Expenses Trend";
+        title = "Income vs Expenses Trend Analysis";
         break;
       case "savings":
         dataToExport = savingsData;
-        title = "Savings Trend";
+        title = "Savings Trend Analysis";
         break;
       case "categories":
         dataToExport = pieChartData;
-        title = "Expense Categories";
+        title = "Expense Categories Analysis";
         break;
-      case "all":
+      case "comprehensive":
       default:
         dataToExport = {
           trends: trendData,
           savings: savingsData,
           categories: pieChartData
         };
-        title = "Financial Reports";
+        title = "Comprehensive Financial Analytics Report";
     }
     
     // Export based on selected format
@@ -76,9 +77,35 @@ export const ExportDialog = ({ trendData, savingsData, pieChartData }: ExportDia
           break;
       }
       
-      toast.success(`Report exported to ${exportFormat.toUpperCase()} successfully!`);
+      toast.success(`Comprehensive analytics report exported to ${exportFormat.toUpperCase()} successfully!`);
     } catch (error) {
       toast.error(`Error exporting report: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  const getFormatIcon = () => {
+    switch(exportFormat) {
+      case "pdf":
+        return <FileText className="h-4 w-4" />;
+      case "excel":
+        return <FileSpreadsheet className="h-4 w-4" />;
+      default:
+        return <Download className="h-4 w-4" />;
+    }
+  };
+
+  const getSectionDescription = () => {
+    switch(exportSection) {
+      case "comprehensive":
+        return "Complete financial analysis including trends, categories, projections, and recommendations";
+      case "trends":
+        return "Income vs expenses trends with growth analysis and monthly comparisons";
+      case "savings":
+        return "Savings patterns, cumulative analysis, and target achievement tracking";
+      case "categories":
+        return "Expense breakdown by category with risk assessment and optimization insights";
+      default:
+        return "";
     }
   };
 
@@ -90,51 +117,89 @@ export const ExportDialog = ({ trendData, savingsData, pieChartData }: ExportDia
           Export Report
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent className="max-w-md w-full">
+      <AlertDialogContent className="max-w-lg w-full">
         <AlertDialogHeader>
-          <AlertDialogTitle>Export Report</AlertDialogTitle>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Export Financial Analytics
+          </AlertDialogTitle>
           <AlertDialogDescription>
-            Choose a format to export your financial reports.
+            Generate beautifully structured reports with comprehensive analytics, insights, and recommendations.
           </AlertDialogDescription>
         </AlertDialogHeader>
         
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <label htmlFor="export-format" className="text-right sm:text-left">Format</label>
-            <div className="col-span-3">
-              <Select value={exportFormat} onValueChange={setExportFormat}>
-                <SelectTrigger id="export-format">
-                  <SelectValue placeholder="Select Format" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pdf">PDF Document</SelectItem>
-                  <SelectItem value="excel">Excel Spreadsheet</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        <div className="grid gap-6 py-4">
+          <div className="space-y-3">
+            <label htmlFor="export-format" className="text-sm font-medium">Export Format</label>
+            <Select value={exportFormat} onValueChange={setExportFormat}>
+              <SelectTrigger id="export-format">
+                <SelectValue placeholder="Select Format" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pdf">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-red-500" />
+                    <span>PDF Document</span>
+                    <Badge variant="secondary" className="ml-auto">Beautiful</Badge>
+                  </div>
+                </SelectItem>
+                <SelectItem value="excel">
+                  <div className="flex items-center gap-2">
+                    <FileSpreadsheet className="h-4 w-4 text-green-500" />
+                    <span>Excel Spreadsheet</span>
+                    <Badge variant="secondary" className="ml-auto">Detailed</Badge>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
-          <div className="grid grid-cols-4 items-center gap-4">
-            <label htmlFor="export-section" className="text-right sm:text-left">Section</label>
-            <div className="col-span-3">
-              <Select value={exportSection} onValueChange={setExportSection}>
-                <SelectTrigger id="export-section">
-                  <SelectValue placeholder="Select Section" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Reports</SelectItem>
-                  <SelectItem value="trends">Income vs Expenses</SelectItem>
-                  <SelectItem value="savings">Savings Trend</SelectItem>
-                  <SelectItem value="categories">Expense Categories</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="space-y-3">
+            <label htmlFor="export-section" className="text-sm font-medium">Report Content</label>
+            <Select value={exportSection} onValueChange={setExportSection}>
+              <SelectTrigger id="export-section">
+                <SelectValue placeholder="Select Content" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="comprehensive">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 text-blue-500" />
+                    <span>Comprehensive Analytics</span>
+                    <Badge className="ml-auto">Recommended</Badge>
+                  </div>
+                </SelectItem>
+                <SelectItem value="trends">Income vs Expenses Trends</SelectItem>
+                <SelectItem value="savings">Savings Analysis</SelectItem>
+                <SelectItem value="categories">Category Breakdown</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <div className="p-3 bg-blue-50 rounded-lg">
+              <p className="text-xs text-blue-700">
+                <strong>Includes:</strong> {getSectionDescription()}
+              </p>
             </div>
+          </div>
+
+          <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
+            <h4 className="font-medium text-green-800 mb-2">✨ Enhanced Analytics Features:</h4>
+            <ul className="text-xs text-green-700 space-y-1">
+              <li>• Financial Health Score (0-100)</li>
+              <li>• Personalized Recommendations</li>
+              <li>• Risk Assessment & Projections</li>
+              <li>• Month-over-month Growth Analysis</li>
+              <li>• Category Optimization Insights</li>
+              <li>• Professional Formatting & Charts</li>
+            </ul>
           </div>
         </div>
         
         <AlertDialogFooter className="sm:justify-end">
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleExport}>Export</AlertDialogAction>
+          <AlertDialogAction onClick={handleExport} className="flex items-center gap-2">
+            {getFormatIcon()}
+            Generate Report
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
