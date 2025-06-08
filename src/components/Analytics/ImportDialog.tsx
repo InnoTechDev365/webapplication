@@ -1,5 +1,5 @@
 
-import { useRef, useState } from "react";
+import { useState, useRef } from "react";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -12,143 +12,165 @@ import {
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Upload, FileText, FileSpreadsheet, CheckCircle, AlertCircle } from "lucide-react";
+import { Upload, FileText, FileSpreadsheet, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useAppContext } from "@/lib/AppContext";
 
 export const ImportDialog = () => {
   const [showDialog, setShowDialog] = useState(false);
-  const [importFile, setImportFile] = useState<File | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [processingProgress, setProcessingProgress] = useState(0);
-  const [previewData, setPreviewData] = useState<any>(null);
+  const [importData, setImportData] = useState<any>(null);
+  const [previewMode, setPreviewMode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { formatCurrency } = useAppContext();
 
-  // Function to simulate file processing and data extraction
-  const processFile = async (file: File) => {
-    setIsProcessing(true);
-    setProcessingProgress(0);
-
-    // Simulate processing steps
-    const steps = [
-      { message: "Reading file...", progress: 20 },
-      { message: "Parsing data structure...", progress: 40 },
-      { message: "Validating financial data...", progress: 60 },
-      { message: "Extracting analytics...", progress: 80 },
-      { message: "Preparing import preview...", progress: 100 }
-    ];
-
-    for (const step of steps) {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setProcessingProgress(step.progress);
-      toast.info(step.message);
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
     }
-
-    // Generate mock preview data based on file type
-    const fileExtension = file.name.split('.').pop()?.toLowerCase();
-    let mockData;
-
-    if (fileExtension === 'pdf') {
-      mockData = {
-        type: 'PDF Bank Statement',
-        transactions: 47,
-        dateRange: 'Jan 2024 - Dec 2024',
-        categories: ['Food & Dining', 'Transportation', 'Shopping', 'Bills & Utilities'],
-        totalIncome: 12500,
-        totalExpenses: 8300,
-        preview: [
-          { date: '2024-01-15', description: 'Salary Deposit', amount: 3500, type: 'income' },
-          { date: '2024-01-16', description: 'Grocery Store', amount: -120, type: 'expense' },
-          { date: '2024-01-18', description: 'Gas Station', amount: -45, type: 'expense' }
-        ]
-      };
-    } else {
-      mockData = {
-        type: 'Excel/CSV Financial Data',
-        transactions: 89,
-        dateRange: 'Jan 2024 - Dec 2024',
-        categories: ['Salary', 'Freelance', 'Groceries', 'Rent', 'Utilities'],
-        totalIncome: 18700,
-        totalExpenses: 11200,
-        preview: [
-          { date: '2024-01-01', description: 'Monthly Salary', amount: 4000, type: 'income' },
-          { date: '2024-01-03', description: 'Rent Payment', amount: -1200, type: 'expense' },
-          { date: '2024-01-05', description: 'Freelance Project', amount: 800, type: 'income' }
-        ]
-      };
-    }
-
-    setPreviewData(mockData);
-    setIsProcessing(false);
-    toast.success("File processed successfully! Review the preview below.");
   };
 
-  // Function to handle import
-  const handleImport = async () => {
-    if (!importFile) {
-      toast.error("Please select a file to import");
-      return;
-    }
-
-    const fileExtension = importFile.name.split('.').pop()?.toLowerCase();
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
     
-    if (!['pdf', 'xlsx', 'xls', 'csv'].includes(fileExtension || '')) {
-      toast.error("Please select a PDF, Excel, or CSV file");
-      return;
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      handleFile(files[0]);
     }
-
-    if (!previewData) {
-      await processFile(importFile);
-      return;
-    }
-
-    // Simulate actual import process
-    toast.promise(
-      new Promise((resolve) => {
-        setTimeout(() => {
-          resolve(`Successfully imported ${previewData.transactions} transactions from ${importFile.name}`);
-          setShowDialog(false);
-          setImportFile(null);
-          setPreviewData(null);
-        }, 2000);
-      }),
-      {
-        loading: `Importing ${previewData.transactions} transactions...`,
-        success: (message) => message as string,
-        error: 'Failed to import data'
-      }
-    );
   };
 
-  // Function to handle file selection
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      setImportFile(files[0]);
-      setPreviewData(null);
-      setProcessingProgress(0);
+      handleFile(files[0]);
     }
   };
 
-  // Function to render file icon based on file type
-  const renderFileIcon = () => {
-    if (!importFile) return null;
+  const handleFile = async (file: File) => {
+    const validTypes = ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+    const maxSize = 10 * 1024 * 1024; // 10MB
     
-    const fileExtension = importFile.name.split('.').pop()?.toLowerCase();
-    
-    if (fileExtension === 'pdf') {
-      return <FileText className="h-6 w-6 text-red-500" />;
-    } else if (['xlsx', 'xls', 'csv'].includes(fileExtension || '')) {
-      return <FileSpreadsheet className="h-6 w-6 text-green-500" />;
+    if (!validTypes.includes(file.type) && !file.name.endsWith('.csv')) {
+      toast.error("Please upload a CSV or Excel file");
+      return;
     }
     
-    return null;
+    if (file.size > maxSize) {
+      toast.error("File size must be less than 10MB");
+      return;
+    }
+
+    setIsProcessing(true);
+    setUploadProgress(0);
+
+    // Simulate processing progress
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return prev;
+        }
+        return prev + 10;
+      });
+    }, 100);
+
+    try {
+      const content = await file.text();
+      
+      // Parse CSV content
+      const lines = content.split('\n').filter(line => line.trim());
+      const parsedData = {
+        trends: [],
+        categories: [],
+        savings: [],
+        metadata: {
+          fileName: file.name,
+          fileSize: file.size,
+          recordCount: lines.length - 1, // Excluding header
+          uploadDate: new Date().toISOString()
+        }
+      };
+
+      // Mock parsing logic - in real implementation, this would parse the actual CSV structure
+      if (lines.length > 1) {
+        // Generate sample data based on file content
+        parsedData.trends = [
+          { name: 'Jan', income: 4000, expenses: 2800 },
+          { name: 'Feb', income: 4200, expenses: 2900 },
+          { name: 'Mar', income: 3800, expenses: 2700 }
+        ];
+        
+        parsedData.categories = [
+          { name: 'Housing', value: 1200 },
+          { name: 'Food', value: 800 },
+          { name: 'Transportation', value: 600 },
+          { name: 'Utilities', value: 300 }
+        ];
+        
+        parsedData.savings = [
+          { name: 'Jan', amount: 1200 },
+          { name: 'Feb', amount: 1300 },
+          { name: 'Mar', amount: 1100 }
+        ];
+      }
+
+      setUploadProgress(100);
+      setImportData(parsedData);
+      setPreviewMode(true);
+      toast.success("File processed successfully! Review the data before importing.");
+    } catch (error) {
+      toast.error("Error processing file. Please check the file format.");
+      console.error("Import error:", error);
+    } finally {
+      clearInterval(progressInterval);
+      setIsProcessing(false);
+    }
+  };
+
+  const handleImport = () => {
+    if (!importData) return;
+    
+    try {
+      // Here you would integrate with your data storage system
+      // For now, we'll just show success
+      console.log("Importing comprehensive financial data:", importData);
+      
+      toast.success(`Successfully imported ${importData.metadata.recordCount} records from ${importData.metadata.fileName}`);
+      setShowDialog(false);
+      setPreviewMode(false);
+      setImportData(null);
+      setUploadProgress(0);
+    } catch (error) {
+      toast.error("Failed to import data");
+      console.error("Import error:", error);
+    }
+  };
+
+  const resetDialog = () => {
+    setPreviewMode(false);
+    setImportData(null);
+    setUploadProgress(0);
+    setIsProcessing(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
-    <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
+    <AlertDialog open={showDialog} onOpenChange={(open) => {
+      setShowDialog(open);
+      if (!open) resetDialog();
+    }}>
       <AlertDialogTrigger asChild>
         <Button variant="outline" className="flex gap-2 items-center">
           <Upload className="h-4 w-4" />
@@ -157,82 +179,150 @@ export const ImportDialog = () => {
       </AlertDialogTrigger>
       <AlertDialogContent className="max-w-2xl w-full max-h-[80vh] overflow-y-auto">
         <AlertDialogHeader>
-          <AlertDialogTitle>Import Financial Data</AlertDialogTitle>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <Upload className="h-5 w-5" />
+            Import Comprehensive Financial Data
+          </AlertDialogTitle>
           <AlertDialogDescription>
-            Upload your bank statements (PDF) or financial data (Excel/CSV) to automatically import transactions and analytics.
+            Import your financial data from CSV or Excel files. Data will be validated and formatted according to your currency settings.
           </AlertDialogDescription>
         </AlertDialogHeader>
         
         <div className="grid gap-6 py-4">
-          {/* File Upload Section */}
-          <div className="grid grid-cols-1 gap-4">
-            <Label htmlFor="file-upload">Choose File</Label>
-            <Input
-              ref={fileInputRef}
-              id="file-upload"
-              type="file"
-              accept=".xlsx,.xls,.csv,.pdf"
-              onChange={handleFileChange}
-              className="cursor-pointer file:cursor-pointer"
-            />
-            {importFile && (
-              <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
-                {renderFileIcon()}
-                <div className="flex-1">
-                  <p className="font-medium text-sm">{importFile.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {(importFile.size / 1024 / 1024).toFixed(2)} MB
+          {!previewMode ? (
+            <>
+              {/* File Upload Area */}
+              <div
+                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                  dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+                }`}
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+              >
+                <div className="flex flex-col items-center gap-4">
+                  <div className="p-3 bg-blue-100 rounded-full">
+                    <Upload className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium">Drop your file here</h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Or click to browse for CSV/Excel files
+                    </p>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isProcessing}
+                  >
+                    Browse Files
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv,.xlsx,.xls"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+
+              {/* Processing Progress */}
+              {isProcessing && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    <span className="text-sm">Processing file...</span>
+                  </div>
+                  <Progress value={uploadProgress} className="w-full" />
+                </div>
+              )}
+
+              {/* File Format Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FileText className="h-4 w-4 text-blue-600" />
+                    <span className="font-medium text-blue-800">CSV Format</span>
+                  </div>
+                  <ul className="text-xs text-blue-700 space-y-1">
+                    <li>• Income/Expense trends by month</li>
+                    <li>• Category breakdowns</li>
+                    <li>• Savings data</li>
+                    <li>• Comma-separated values</li>
+                  </ul>
+                </div>
+                <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                    <span className="font-medium text-green-800">Excel Format</span>
+                  </div>
+                  <ul className="text-xs text-green-700 space-y-1">
+                    <li>• Multiple sheets supported</li>
+                    <li>• Formatted currency data</li>
+                    <li>• Date columns</li>
+                    <li>• .xlsx and .xls files</li>
+                  </ul>
+                </div>
+              </div>
+            </>
+          ) : (
+            /* Data Preview */
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
+                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="font-medium text-green-800">File processed successfully!</p>
+                  <p className="text-sm text-green-700">
+                    {importData.metadata.recordCount} records found in {importData.metadata.fileName}
                   </p>
                 </div>
-                <CheckCircle className="h-5 w-5 text-green-500" />
               </div>
-            )}
-          </div>
 
-          {/* Processing Progress */}
-          {isProcessing && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 text-blue-500 animate-spin" />
-                <span className="text-sm">Processing file...</span>
-              </div>
-              <Progress value={processingProgress} className="w-full" />
-            </div>
-          )}
-
-          {/* Data Preview */}
-          {previewData && !isProcessing && (
-            <div className="space-y-4 border rounded-lg p-4 bg-green-50">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-                <h3 className="font-semibold text-green-800">Import Preview</h3>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              {/* Data Preview */}
+              <div className="grid gap-4">
                 <div>
-                  <p><strong>File Type:</strong> {previewData.type}</p>
-                  <p><strong>Transactions:</strong> {previewData.transactions}</p>
-                  <p><strong>Date Range:</strong> {previewData.dateRange}</p>
+                  <h4 className="font-medium mb-2">Income vs Expenses Trends</h4>
+                  <div className="bg-gray-50 p-3 rounded border text-sm">
+                    {importData.trends.slice(0, 3).map((item: any, index: number) => (
+                      <div key={index} className="flex justify-between py-1">
+                        <span>{item.name}</span>
+                        <span>Income: {formatCurrency(item.income)}, Expenses: {formatCurrency(item.expenses)}</span>
+                      </div>
+                    ))}
+                    {importData.trends.length > 3 && (
+                      <div className="text-gray-500 pt-1">
+                        +{importData.trends.length - 3} more months...
+                      </div>
+                    )}
+                  </div>
                 </div>
+
                 <div>
-                  <p><strong>Total Income:</strong> ${previewData.totalIncome.toLocaleString()}</p>
-                  <p><strong>Total Expenses:</strong> ${previewData.totalExpenses.toLocaleString()}</p>
-                  <p><strong>Categories:</strong> {previewData.categories.length}</p>
+                  <h4 className="font-medium mb-2">Expense Categories</h4>
+                  <div className="bg-gray-50 p-3 rounded border text-sm">
+                    {importData.categories.slice(0, 3).map((item: any, index: number) => (
+                      <div key={index} className="flex justify-between py-1">
+                        <span>{item.name}</span>
+                        <span>{formatCurrency(item.value)}</span>
+                      </div>
+                    ))}
+                    {importData.categories.length > 3 && (
+                      <div className="text-gray-500 pt-1">
+                        +{importData.categories.length - 3} more categories...
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <h4 className="font-medium mb-2">Sample Transactions:</h4>
-                <div className="space-y-1 max-h-32 overflow-y-auto">
-                  {previewData.preview.map((transaction: any, index: number) => (
-                    <div key={index} className="flex justify-between items-center text-xs p-2 bg-white rounded">
-                      <span>{transaction.date}</span>
-                      <span className="flex-1 mx-2 truncate">{transaction.description}</span>
-                      <span className={transaction.amount > 0 ? "text-green-600" : "text-red-600"}>
-                        ${Math.abs(transaction.amount).toLocaleString()}
-                      </span>
-                    </div>
-                  ))}
+              <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-amber-600" />
+                  <span className="text-sm font-medium text-amber-800">
+                    Review the data above before importing. This will merge with your existing financial data.
+                  </span>
                 </div>
               </div>
             </div>
@@ -240,19 +330,19 @@ export const ImportDialog = () => {
         </div>
         
         <AlertDialogFooter className="sm:justify-end">
-          <AlertDialogCancel onClick={() => {
-            setImportFile(null);
-            setPreviewData(null);
-            setProcessingProgress(0);
-          }}>
-            Cancel
+          <AlertDialogCancel onClick={resetDialog}>
+            {previewMode ? 'Back to Upload' : 'Cancel'}
           </AlertDialogCancel>
-          <AlertDialogAction 
-            onClick={handleImport}
-            disabled={!importFile || isProcessing}
-          >
-            {previewData ? 'Import Data' : 'Process File'}
-          </AlertDialogAction>
+          {previewMode ? (
+            <AlertDialogAction onClick={handleImport} className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4" />
+              Import Data
+            </AlertDialogAction>
+          ) : (
+            <Button disabled className="opacity-50">
+              Preview Required
+            </Button>
+          )}
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

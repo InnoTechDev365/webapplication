@@ -23,6 +23,7 @@ import { Download, FileText, FileSpreadsheet, BarChart3 } from "lucide-react";
 import { exportToPdf, exportToExcel } from "@/lib/exportUtils";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { useAppContext } from "@/lib/AppContext";
 
 interface ExportDialogProps {
   trendData: any[];
@@ -32,52 +33,34 @@ interface ExportDialogProps {
 
 export const ExportDialog = ({ trendData, savingsData, pieChartData }: ExportDialogProps) => {
   const [exportFormat, setExportFormat] = useState("pdf");
-  const [exportSection, setExportSection] = useState("comprehensive");
   const [showDialog, setShowDialog] = useState(false);
+  const { formatCurrency } = useAppContext();
 
   // Function to handle export
   const handleExport = () => {
     setShowDialog(false);
     
-    // Get data to export based on selected section
-    let dataToExport;
-    let title = "";
+    // Prepare comprehensive data
+    const comprehensiveData = {
+      trends: trendData,
+      savings: savingsData,
+      categories: pieChartData
+    };
     
-    switch(exportSection) {
-      case "trends":
-        dataToExport = trendData;
-        title = "Income vs Expenses Trend Analysis";
-        break;
-      case "savings":
-        dataToExport = savingsData;
-        title = "Savings Trend Analysis";
-        break;
-      case "categories":
-        dataToExport = pieChartData;
-        title = "Expense Categories Analysis";
-        break;
-      case "comprehensive":
-      default:
-        dataToExport = {
-          trends: trendData,
-          savings: savingsData,
-          categories: pieChartData
-        };
-        title = "Comprehensive Financial Analytics Report";
-    }
+    const title = "Comprehensive Financial Analytics Report";
     
-    // Export based on selected format
+    // Export based on selected format with currency formatting
     try {
       switch(exportFormat) {
         case "pdf":
-          exportToPdf(dataToExport, title);
+          exportToPdf(comprehensiveData, title, formatCurrency);
           break;
         case "excel":
-          exportToExcel(dataToExport, title);
+          exportToExcel(comprehensiveData, title, formatCurrency);
           break;
       }
       
-      toast.success(`Comprehensive analytics report exported to ${exportFormat.toUpperCase()} successfully!`);
+      toast.success(`Professional financial analytics report exported to ${exportFormat.toUpperCase()} successfully!`);
     } catch (error) {
       toast.error(`Error exporting report: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
@@ -94,21 +77,6 @@ export const ExportDialog = ({ trendData, savingsData, pieChartData }: ExportDia
     }
   };
 
-  const getSectionDescription = () => {
-    switch(exportSection) {
-      case "comprehensive":
-        return "Complete financial analysis including trends, categories, projections, and recommendations";
-      case "trends":
-        return "Income vs expenses trends with growth analysis and monthly comparisons";
-      case "savings":
-        return "Savings patterns, cumulative analysis, and target achievement tracking";
-      case "categories":
-        return "Expense breakdown by category with risk assessment and optimization insights";
-      default:
-        return "";
-    }
-  };
-
   return (
     <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
       <AlertDialogTrigger asChild>
@@ -121,10 +89,10 @@ export const ExportDialog = ({ trendData, savingsData, pieChartData }: ExportDia
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
-            Export Financial Analytics
+            Export Comprehensive Financial Report
           </AlertDialogTitle>
           <AlertDialogDescription>
-            Generate beautifully structured reports with comprehensive analytics, insights, and recommendations.
+            Generate a professional, comprehensive financial analytics report with full insights, recommendations, and currency-formatted data.
           </AlertDialogDescription>
         </AlertDialogHeader>
         
@@ -139,57 +107,44 @@ export const ExportDialog = ({ trendData, savingsData, pieChartData }: ExportDia
                 <SelectItem value="pdf">
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-red-500" />
-                    <span>PDF Document</span>
-                    <Badge variant="secondary" className="ml-auto">Beautiful</Badge>
+                    <span>Professional PDF Report</span>
+                    <Badge variant="secondary" className="ml-auto">Recommended</Badge>
                   </div>
                 </SelectItem>
                 <SelectItem value="excel">
                   <div className="flex items-center gap-2">
                     <FileSpreadsheet className="h-4 w-4 text-green-500" />
-                    <span>Excel Spreadsheet</span>
-                    <Badge variant="secondary" className="ml-auto">Detailed</Badge>
+                    <span>Detailed Excel Spreadsheet</span>
+                    <Badge variant="secondary" className="ml-auto">Editable</Badge>
                   </div>
                 </SelectItem>
               </SelectContent>
             </Select>
           </div>
           
-          <div className="space-y-3">
-            <label htmlFor="export-section" className="text-sm font-medium">Report Content</label>
-            <Select value={exportSection} onValueChange={setExportSection}>
-              <SelectTrigger id="export-section">
-                <SelectValue placeholder="Select Content" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="comprehensive">
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4 text-blue-500" />
-                    <span>Comprehensive Analytics</span>
-                    <Badge className="ml-auto">Recommended</Badge>
-                  </div>
-                </SelectItem>
-                <SelectItem value="trends">Income vs Expenses Trends</SelectItem>
-                <SelectItem value="savings">Savings Analysis</SelectItem>
-                <SelectItem value="categories">Category Breakdown</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <p className="text-xs text-blue-700">
-                <strong>Includes:</strong> {getSectionDescription()}
-              </p>
-            </div>
+          <div className="p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
+            <h4 className="font-medium text-blue-800 mb-2">📊 Comprehensive Report Includes:</h4>
+            <ul className="text-xs text-blue-700 space-y-1">
+              <li>• Executive Summary with Financial Health Score</li>
+              <li>• Monthly Income vs Expenses Trend Analysis</li>
+              <li>• Detailed Category Breakdown & Risk Assessment</li>
+              <li>• Savings Analysis & Target Achievement</li>
+              <li>• 12-Month Financial Projections</li>
+              <li>• Personalized Recommendations by Priority</li>
+              <li>• Advanced Performance Metrics</li>
+              <li>• Currency-Formatted Professional Layout</li>
+            </ul>
           </div>
 
-          <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
-            <h4 className="font-medium text-green-800 mb-2">✨ Enhanced Analytics Features:</h4>
-            <ul className="text-xs text-green-700 space-y-1">
-              <li>• Financial Health Score (0-100)</li>
-              <li>• Personalized Recommendations</li>
-              <li>• Risk Assessment & Projections</li>
-              <li>• Month-over-month Growth Analysis</li>
-              <li>• Category Optimization Insights</li>
-              <li>• Professional Formatting & Charts</li>
+          <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200">
+            <h4 className="font-medium text-amber-800 mb-2">✨ Professional Features:</h4>
+            <ul className="text-xs text-amber-700 space-y-1">
+              <li>• Multi-page structured document</li>
+              <li>• Currency-specific formatting</li>
+              <li>• Industry benchmark comparisons</li>
+              <li>• Actionable insights with timelines</li>
+              <li>• Investment readiness assessment</li>
+              <li>• Full-screen document viewing</li>
             </ul>
           </div>
         </div>
@@ -198,7 +153,7 @@ export const ExportDialog = ({ trendData, savingsData, pieChartData }: ExportDia
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction onClick={handleExport} className="flex items-center gap-2">
             {getFormatIcon()}
-            Generate Report
+            Generate Professional Report
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
