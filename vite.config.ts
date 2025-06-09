@@ -15,7 +15,7 @@ export default defineConfig(({ command, mode }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
-    base: isProd && !isDev ? '/ExpenseCoin/' : './',
+    base: isProd && !isDev ? '/ExpenseCoin/' : '/',
     build: {
       outDir: 'dist',
       assetsDir: 'assets',
@@ -31,7 +31,7 @@ export default defineConfig(({ command, mode }) => {
       }
     },
     server: {
-      port: 5173,
+      port: 8080,
       host: true
     },
     preview: {

@@ -65,9 +65,7 @@ function handleGitHubPagesRouting() {
       return s.replace(/~and~/g, '&')
     }).join('?');
     
-    window.history.replaceState(null, null,
-      window.location.pathname + decoded + window.location.hash
-    );
+    window.history.replaceState(null, '', decoded + window.location.hash);
   }
 }
 
@@ -81,9 +79,6 @@ function initializeApp() {
   if (!rootElement) {
     throw new Error('Root element not found');
   }
-
-  // Mark the app as loaded for React components
-  rootElement.classList.add('react-app');
 
   const root = createRoot(rootElement);
   
