@@ -57,23 +57,8 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 }
 
-// GitHub Pages routing fix
-function handleGitHubPagesRouting() {
-  const search = window.location.search;
-  if (search && search.indexOf('?/') === 0) {
-    const decoded = search.slice(2).split('&').map(function(s) { 
-      return s.replace(/~and~/g, '&')
-    }).join('?');
-    
-    window.history.replaceState(null, '', decoded + window.location.hash);
-  }
-}
-
 // Wait for DOM to be ready
 function initializeApp() {
-  // Handle GitHub Pages routing first
-  handleGitHubPagesRouting();
-  
   const rootElement = document.getElementById("root");
   
   if (!rootElement) {

@@ -5,14 +5,14 @@
     <meta charset="utf-8">
     <title>ExpenseCoin</title>
     <script>
-      // GitHub Pages SPA redirect
+      // GitHub Pages SPA redirect for hash router
       var pathSegmentsToKeep = 1;
       
       var l = window.location;
       var redirect = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/#' +
         l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
-        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        (l.search ? '?' + l.search.slice(1).replace(/&/g, '~and~') : '') +
         l.hash;
       
       l.replace(redirect);
@@ -21,7 +21,7 @@
   <body>
     <div style="text-align: center; padding: 50px;">
       <h1>Redirecting...</h1>
-      <p>If you are not redirected automatically, <a href="/">click here</a>.</p>
+      <p>If you are not redirected automatically, <a href="/ExpenseCoin/">click here</a>.</p>
     </div>
   </body>
 </html>

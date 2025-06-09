@@ -15,7 +15,7 @@ export default defineConfig(({ command, mode }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
-    base: isProd && !isDev ? '/ExpenseCoin/' : '/',
+    base: isProd ? '/ExpenseCoin/' : '/',
     build: {
       outDir: 'dist',
       assetsDir: 'assets',
