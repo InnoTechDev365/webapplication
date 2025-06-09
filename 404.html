@@ -5,20 +5,31 @@
     <meta charset="utf-8">
     <title>ExpenseCoin - Redirecting...</title>
     <script>
-      // GitHub Pages SPA redirect
+      // GitHub Pages SPA redirect for subdirectory deployment
       var pathSegmentsToKeep = 1;
-
+      
       var l = window.location;
+      var pathname = l.pathname;
+      
+      // Handle subdirectory deployment (e.g., /ExpenseCoin/)
+      var segments = pathname.split('/').filter(Boolean);
+      var basePath = segments.length > 0 ? '/' + segments[0] + '/' : '/';
+      
+      // Redirect to index.html with route information
       l.replace(
         l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + 
-        '/?/' +
-        l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+        basePath +
+        '?/' +
+        segments.slice(1).join('/').replace(/&/g, '~and~') +
         (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
         l.hash
       );
     </script>
   </head>
   <body>
+    <div style="text-align: center; padding: 50px;">
+      <h1>Redirecting...</h1>
+      <p>If you are not redirected automatically, <a href="/">click here</a>.</p>
+    </div>
   </body>
 </html>
