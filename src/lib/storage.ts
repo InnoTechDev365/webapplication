@@ -26,29 +26,14 @@ class StorageManager {
   private userId: string;
 
   constructor() {
-    // Generate or get user ID
-    this.userId = this.getUserId();
-    
-    // Load settings from localStorage or use defaults
-    const savedSettings = localStorage.getItem(`user_settings_${this.userId}`);
-    this.settings = savedSettings ? JSON.parse(savedSettings) : { ...defaultSettings };
-    
-    // Save default settings if none exist
-    if (!savedSettings) {
-      this.saveSettings(this.settings);
-    }
-    
-    // Initialize default categories if none exist
-    const existingCategories = this.getCategories();
-    if (existingCategories.length === 0) {
-      this.saveCategories(defaultCategories);
-    }
-    
-    // Check if already connected to Supabase
+    this.userId = this.initializeUserId();
+    this.settings = this.loadSettings();
+    this.initializeDefaultData();
     this.isSupabaseConnected = this.settings.storageType === 'supabase';
   }
 
-  private getUserId(): string {
+  // Private initialization methods
+  private initializeUserId(): string {
     let userId = localStorage.getItem('expense_coin_user_id');
     if (!userId) {
       userId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -57,7 +42,25 @@ class StorageManager {
     return userId;
   }
 
-  // Settings management
+  private loadSettings(): UserSettings {
+    const savedSettings = localStorage.getItem(`user_settings_${this.userId}`);
+    const settings = savedSettings ? JSON.parse(savedSettings) : { ...defaultSettings };
+    
+    if (!savedSettings) {
+      this.saveSettings(settings);
+    }
+    
+    return settings;
+  }
+
+  private initializeDefaultData(): void {
+    const existingCategories = this.getCategories();
+    if (existingCategories.length === 0) {
+      this.saveCategories(defaultCategories);
+    }
+  }
+
+  // Public API methods
   getSettings(): UserSettings {
     return { ...this.settings };
   }
@@ -72,7 +75,7 @@ class StorageManager {
     this.saveSettings(this.settings);
   }
 
-  // Supabase connection status
+  // Supabase connection management
   isConnectedToSupabase(): boolean {
     return this.isSupabaseConnected;
   }
@@ -82,12 +85,11 @@ class StorageManager {
     this.settings.storageType = connected ? 'supabase' : 'local';
     this.saveSettings(this.settings);
     
-    if (!connected) {
-      console.log('Disconnected from Supabase. Data will now only be stored locally.');
-    } else {
-      console.log('Connected to Supabase. Data will now be synchronized between local storage and Supabase.');
-      // Sync existing data to Supabase
+    if (connected) {
+      console.log('Connected to Supabase. Data will now be synchronized.');
       this.syncToSupabase();
+    } else {
+      console.log('Disconnected from Supabase. Data will be stored locally only.');
     }
   }
 
@@ -98,7 +100,6 @@ class StorageManager {
     const budgets = this.getBudgets();
     const categories = this.getCategories();
     
-    // In a real implementation, this would sync to Supabase
     console.log('Syncing to Supabase:', {
       transactions: transactions.length,
       budgets: budgets.length,
@@ -107,91 +108,73 @@ class StorageManager {
     });
   }
 
-  // Data storage methods
-  saveTransactions(transactions: Transaction[]): void {
-    // Always save locally
-    localStorage.setItem(`transactions_${this.userId}`, JSON.stringify(transactions));
-    
-    // If connected to Supabase, also save there
-    if (this.isSupabaseConnected) {
-      console.log(`Syncing ${transactions.length} transactions to Supabase for user ${this.userId}`);
-      // Here would be the actual Supabase save code
-    }
-  }
-
+  // Transaction management
   getTransactions(): Transaction[] {
-    // First try to get from Supabase if connected
     if (this.isSupabaseConnected) {
       console.log(`Fetching transactions from Supabase for user ${this.userId}`);
-      // Here would be the actual Supabase fetch code
     }
     
-    // Fall back to local storage
     const data = localStorage.getItem(`transactions_${this.userId}`);
     return data ? JSON.parse(data) : [];
   }
 
-  saveBudgets(budgets: Budget[]): void {
-    // Always save locally
-    localStorage.setItem(`budgets_${this.userId}`, JSON.stringify(budgets));
+  saveTransactions(transactions: Transaction[]): void {
+    localStorage.setItem(`transactions_${this.userId}`, JSON.stringify(transactions));
     
-    // If connected to Supabase, also save there
     if (this.isSupabaseConnected) {
-      console.log(`Syncing ${budgets.length} budgets to Supabase for user ${this.userId}`);
-      // Here would be the actual Supabase save code
+      console.log(`Syncing ${transactions.length} transactions to Supabase for user ${this.userId}`);
     }
   }
 
-  getBudgets(): Budget[] {
-    // First try to get from Supabase if connected
-    if (this.isSupabaseConnected) {
-      console.log(`Fetching budgets from Supabase for user ${this.userId}`);
-      // Here would be the actual Supabase fetch code
-    }
-    
-    // Fall back to local storage
-    const data = localStorage.getItem(`budgets_${this.userId}`);
-    return data ? JSON.parse(data) : [];
-  }
-
-  saveCategories(categories: Category[]): void {
-    // Always save locally
-    localStorage.setItem(`categories_${this.userId}`, JSON.stringify(categories));
-    
-    // If connected to Supabase, also save there
-    if (this.isSupabaseConnected) {
-      console.log(`Syncing ${categories.length} categories to Supabase for user ${this.userId}`);
-      // Here would be the actual Supabase save code
-    }
-  }
-
-  getCategories(): Category[] {
-    // First try to get from Supabase if connected
-    if (this.isSupabaseConnected) {
-      console.log(`Fetching categories from Supabase for user ${this.userId}`);
-      // Here would be the actual Supabase fetch code
-    }
-    
-    // Fall back to local storage
-    const data = localStorage.getItem(`categories_${this.userId}`);
-    return data ? JSON.parse(data) : [];
-  }
-
-  // Add new transaction
   addTransaction(transaction: Transaction): void {
     const transactions = this.getTransactions();
     transactions.unshift(transaction);
     this.saveTransactions(transactions);
   }
 
-  // Add new budget
+  // Budget management
+  getBudgets(): Budget[] {
+    if (this.isSupabaseConnected) {
+      console.log(`Fetching budgets from Supabase for user ${this.userId}`);
+    }
+    
+    const data = localStorage.getItem(`budgets_${this.userId}`);
+    return data ? JSON.parse(data) : [];
+  }
+
+  saveBudgets(budgets: Budget[]): void {
+    localStorage.setItem(`budgets_${this.userId}`, JSON.stringify(budgets));
+    
+    if (this.isSupabaseConnected) {
+      console.log(`Syncing ${budgets.length} budgets to Supabase for user ${this.userId}`);
+    }
+  }
+
   addBudget(budget: Budget): void {
     const budgets = this.getBudgets();
     budgets.push(budget);
     this.saveBudgets(budgets);
   }
 
-  // Clear all data
+  // Category management
+  getCategories(): Category[] {
+    if (this.isSupabaseConnected) {
+      console.log(`Fetching categories from Supabase for user ${this.userId}`);
+    }
+    
+    const data = localStorage.getItem(`categories_${this.userId}`);
+    return data ? JSON.parse(data) : [];
+  }
+
+  saveCategories(categories: Category[]): void {
+    localStorage.setItem(`categories_${this.userId}`, JSON.stringify(categories));
+    
+    if (this.isSupabaseConnected) {
+      console.log(`Syncing ${categories.length} categories to Supabase for user ${this.userId}`);
+    }
+  }
+
+  // Data management
   clearAllData(): void {
     localStorage.removeItem(`transactions_${this.userId}`);
     localStorage.removeItem(`budgets_${this.userId}`);
@@ -199,7 +182,6 @@ class StorageManager {
     
     if (this.isSupabaseConnected) {
       console.log(`Clearing Supabase data for user ${this.userId}`);
-      // Here would be the actual Supabase clear code
     }
   }
 }

@@ -22,14 +22,14 @@ export function DashboardTabs() {
       <TabsContent value="analytics">
         <Card className="p-6">
           <h3 className="text-lg font-medium mb-4">Analytics</h3>
-          <p>Detailed analytics will be available here in the next version.</p>
+          <p className="text-muted-foreground">Detailed analytics will be available here in the next version.</p>
         </Card>
       </TabsContent>
       
       <TabsContent value="reports">
         <Card className="p-6">
           <h3 className="text-lg font-medium mb-4">Reports</h3>
-          <p>Generated reports will be available here in the next version.</p>
+          <p className="text-muted-foreground">Generated reports will be available here in the next version.</p>
         </Card>
       </TabsContent>
     </Tabs>
