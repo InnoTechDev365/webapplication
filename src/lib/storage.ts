@@ -57,10 +57,6 @@ class StorageManager {
     return userId;
   }
 
-  getUserId(): string {
-    return this.userId;
-  }
-
   // Settings management
   getSettings(): UserSettings {
     return { ...this.settings };

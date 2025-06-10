@@ -2,7 +2,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardCharts } from "@/components/Dashboard/DashboardCharts";
 import { RecentTransactions } from "@/components/Dashboard/RecentTransactions";
-import { mockTransactions, getCategoryById } from "@/lib/mockData";
 import { Card } from "@/components/ui/card";
 
 export function DashboardTabs() {
@@ -17,10 +16,7 @@ export function DashboardTabs() {
       <TabsContent value="overview" className="space-y-4">
         <DashboardCharts />
         
-        <RecentTransactions 
-          transactions={mockTransactions}
-          getCategoryById={getCategoryById}
-        />
+        <RecentTransactions />
       </TabsContent>
       
       <TabsContent value="analytics">
