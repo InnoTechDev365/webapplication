@@ -8,6 +8,9 @@ export default defineConfig(({ command, mode }) => {
   const isDev = command === 'serve'
   const isProd = mode === 'production'
   
+  // Get repository name from package.json or environment
+  const repoName = process.env.GITHUB_REPOSITORY?.split('/')[1] || 'ExpenseCoin'
+  
   return {
     plugins: [react()],
     resolve: {
@@ -15,7 +18,7 @@ export default defineConfig(({ command, mode }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
-    base: isProd ? '/ExpenseCoin/' : '/',
+    base: isProd ? `/${repoName}/` : '/',
     build: {
       outDir: 'dist',
       assetsDir: 'assets',
