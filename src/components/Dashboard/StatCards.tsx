@@ -1,5 +1,5 @@
 
-import { Wallet, PiggyBank, TrendingUp } from "lucide-react";
+import { Wallet, PiggyBank } from "lucide-react";
 import { StatCard } from "@/components/Dashboard/StatCard";
 import { useAppContext } from "@/lib/AppContext";
 import { dataService } from "@/lib/dataService";
@@ -8,10 +8,9 @@ export function StatCards() {
   const { formatCurrency } = useAppContext();
   const totalIncome = dataService.getTotalIncome();
   const totalExpenses = dataService.getTotalExpenses();
-  const balance = dataService.getBalance();
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-2">
       <StatCard
         title="Total Income"
         value={formatCurrency(totalIncome)}
@@ -25,13 +24,6 @@ export function StatCards() {
         icon={<Wallet className="h-4 w-4 text-primary" />}
         change={totalExpenses > 0 ? "+5% from last month" : "No expenses yet"}
         changeType={totalExpenses > 0 ? "negative" : "neutral"}
-      />
-      <StatCard
-        title="Current Balance"
-        value={formatCurrency(balance)}
-        icon={<TrendingUp className="h-4 w-4 text-primary" />}
-        change={balance > 0 ? "+2.5% from last month" : balance < 0 ? "Negative balance" : "Add income to start"}
-        changeType={balance > 0 ? "positive" : balance < 0 ? "negative" : "neutral"}
       />
     </div>
   );
