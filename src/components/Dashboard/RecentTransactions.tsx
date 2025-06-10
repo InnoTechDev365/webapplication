@@ -1,4 +1,5 @@
 
+import { useEffect, useState } from "react";
 import { Transaction, Category } from "@/lib/types";
 import { 
   Table, 
@@ -11,19 +12,17 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useAppContext } from "@/lib/AppContext";
+import { dataService } from "@/lib/dataService";
 
-interface RecentTransactionsProps {
-  transactions: Transaction[];
-  getCategoryById: (id: string) => Category | undefined;
-}
-
-export function RecentTransactions({ transactions, getCategoryById }: RecentTransactionsProps) {
+export function RecentTransactions() {
   const { formatCurrency } = useAppContext();
-  
-  // Get the 5 most recent transactions
-  const recentTransactions = [...transactions]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  useEffect(() => {
+    // Load real recent transactions
+    const recentTransactions = dataService.getRecentTransactions();
+    setTransactions(recentTransactions);
+  }, []);
 
   function formatDate(dateString: string): string {
     const date = new Date(dateString);
@@ -31,6 +30,19 @@ export function RecentTransactions({ transactions, getCategoryById }: RecentTran
       month: 'short',
       day: 'numeric',
     }).format(date);
+  }
+
+  if (transactions.length === 0) {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle>Recent Transactions</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 text-center text-muted-foreground">
+          <p>No transactions yet. Add your first income or expense to get started!</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -49,8 +61,8 @@ export function RecentTransactions({ transactions, getCategoryById }: RecentTran
             </TableRow>
           </TableHeader>
           <TableBody>
-            {recentTransactions.map((transaction) => {
-              const category = getCategoryById(transaction.category);
+            {transactions.map((transaction) => {
+              const category = dataService.getCategoryById(transaction.category);
               return (
                 <TableRow key={transaction.id}>
                   <TableCell className="font-medium">{formatDate(transaction.date)}</TableCell>

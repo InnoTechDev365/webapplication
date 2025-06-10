@@ -1,16 +1,22 @@
 
-import { useState } from "react";
-import { mockTransactions, getCategoryById } from "@/lib/mockData";
+import { useState, useEffect } from "react";
 import { Transaction } from "@/lib/types";
+import { dataService } from "@/lib/dataService";
 import { IncomeForm } from "@/components/Income/IncomeForm";
 import { IncomeTable } from "@/components/Income/IncomeTable";
 
 const Income = () => {
-  const [incomes, setIncomes] = useState<Transaction[]>(
-    mockTransactions.filter(transaction => transaction.type === 'income')
-  );
+  const [incomes, setIncomes] = useState<Transaction[]>([]);
+
+  useEffect(() => {
+    // Load real income data
+    const allTransactions = dataService.getTransactions();
+    const incomeTransactions = allTransactions.filter(transaction => transaction.type === 'income');
+    setIncomes(incomeTransactions);
+  }, []);
 
   const handleAddIncome = (newIncome: Transaction) => {
+    dataService.addTransaction(newIncome);
     setIncomes([newIncome, ...incomes]);
   };
 
@@ -27,7 +33,7 @@ const Income = () => {
 
       <IncomeTable 
         incomes={incomes} 
-        getCategoryById={getCategoryById} 
+        getCategoryById={dataService.getCategoryById.bind(dataService)} 
       />
     </div>
   );

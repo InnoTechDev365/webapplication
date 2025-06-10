@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { Transaction } from "@/lib/types";
-import { mockTransactions, getCategoryById } from "@/lib/mockData";
+import { dataService } from "@/lib/dataService";
 
 interface ExpenseFormProps {
   onAddExpense: (expense: Transaction) => void;
@@ -33,17 +33,16 @@ export const ExpenseForm = ({ onAddExpense }: ExpenseFormProps) => {
   const [category, setCategory] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // Filter to only expense categories
-  const expenseCategories = mockTransactions
-    .map(t => getCategoryById(t.category))
-    .filter((cat) => cat && cat.type === 'expense')
-    .filter((cat, index, self) => 
-      index === self.findIndex((c) => c?.id === cat?.id)
-    );
+  // Get real expense categories
+  const expenseCategories = dataService.getExpenseCategories();
 
   const handleAddExpense = () => {
+    if (!description || !amount || !category) {
+      return;
+    }
+
     const newExpense: Transaction = {
-      id: `e${Math.random().toString(36).substring(2, 9)}`,
+      id: `expense_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
       amount: parseFloat(amount),
       description,
       date: new Date().toISOString().split('T')[0],
@@ -103,11 +102,9 @@ export const ExpenseForm = ({ onAddExpense }: ExpenseFormProps) => {
               </SelectTrigger>
               <SelectContent>
                 {expenseCategories.map((cat) => (
-                  cat && (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  )
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -118,7 +115,13 @@ export const ExpenseForm = ({ onAddExpense }: ExpenseFormProps) => {
           <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
             Cancel
           </Button>
-          <Button type="button" onClick={handleAddExpense}>Add Expense</Button>
+          <Button 
+            type="button" 
+            onClick={handleAddExpense}
+            disabled={!description || !amount || !category}
+          >
+            Add Expense
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

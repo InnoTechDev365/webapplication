@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { Transaction } from "@/lib/types";
-import { mockTransactions, getCategoryById } from "@/lib/mockData";
+import { dataService } from "@/lib/dataService";
 
 interface IncomeFormProps {
   onAddIncome: (income: Transaction) => void;
@@ -33,17 +33,16 @@ export const IncomeForm = ({ onAddIncome }: IncomeFormProps) => {
   const [category, setCategory] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // Filter to only income categories
-  const incomeCategories = mockTransactions
-    .map(t => getCategoryById(t.category))
-    .filter((cat) => cat && cat.type === 'income')
-    .filter((cat, index, self) => 
-      index === self.findIndex((c) => c?.id === cat?.id)
-    );
+  // Get real income categories
+  const incomeCategories = dataService.getIncomeCategories();
 
   const handleAddIncome = () => {
+    if (!description || !amount || !category) {
+      return;
+    }
+
     const newIncome: Transaction = {
-      id: `i${Math.random().toString(36).substring(2, 9)}`,
+      id: `income_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
       amount: parseFloat(amount),
       description,
       date: new Date().toISOString().split('T')[0],
@@ -103,11 +102,9 @@ export const IncomeForm = ({ onAddIncome }: IncomeFormProps) => {
               </SelectTrigger>
               <SelectContent>
                 {incomeCategories.map((cat) => (
-                  cat && (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  )
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -118,7 +115,13 @@ export const IncomeForm = ({ onAddIncome }: IncomeFormProps) => {
           <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
             Cancel
           </Button>
-          <Button type="button" onClick={handleAddIncome}>Add Income</Button>
+          <Button 
+            type="button" 
+            onClick={handleAddIncome}
+            disabled={!description || !amount || !category}
+          >
+            Add Income
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

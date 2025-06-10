@@ -1,16 +1,22 @@
 
-import { useState } from "react";
-import { mockTransactions, getCategoryById } from "@/lib/mockData";
+import { useState, useEffect } from "react";
 import { Transaction } from "@/lib/types";
+import { dataService } from "@/lib/dataService";
 import { ExpenseForm } from "@/components/Expenses/ExpenseForm";
 import { ExpensesTable } from "@/components/Expenses/ExpensesTable";
 
 const Expenses = () => {
-  const [expenses, setExpenses] = useState<Transaction[]>(
-    mockTransactions.filter(transaction => transaction.type === 'expense')
-  );
+  const [expenses, setExpenses] = useState<Transaction[]>([]);
+
+  useEffect(() => {
+    // Load real expense data
+    const allTransactions = dataService.getTransactions();
+    const expenseTransactions = allTransactions.filter(transaction => transaction.type === 'expense');
+    setExpenses(expenseTransactions);
+  }, []);
 
   const handleAddExpense = (newExpense: Transaction) => {
+    dataService.addTransaction(newExpense);
     setExpenses([newExpense, ...expenses]);
   };
 
@@ -27,7 +33,7 @@ const Expenses = () => {
 
       <ExpensesTable 
         expenses={expenses} 
-        getCategoryById={getCategoryById} 
+        getCategoryById={dataService.getCategoryById.bind(dataService)} 
       />
     </div>
   );
