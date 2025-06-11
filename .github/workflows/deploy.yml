@@ -2,13 +2,14 @@
 name: Deploy to GitHub Pages
 
 on:
-  push:
-    branches: [ main ]
-    paths-ignore:
-      - 'README.md'
-      - '.gitignore'
-      - 'docs/**'
+  release:
+    types: [published]
   workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual deployment'
+        required: false
+        default: 'Manual deployment'
 
 permissions:
   contents: read
@@ -53,3 +54,11 @@ jobs:
       uses: actions/deploy-pages@v4
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Log deployment reason
+      run: |
+        if [ "${{ github.event_name }}" = "release" ]; then
+          echo "Deployed due to release: ${{ github.event.release.tag_name }}"
+        else
+          echo "Manual deployment: ${{ github.event.inputs.reason }}"
+        fi
