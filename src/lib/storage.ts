@@ -8,7 +8,7 @@ const defaultSettings: UserSettings = {
   storageType: 'local'
 };
 
-// Default categories for new users
+// Default categories for new users (no demo transactions)
 const defaultCategories: Category[] = [
   { id: 'income-salary', name: 'Salary', color: '#10b981', type: 'income' },
   { id: 'income-freelance', name: 'Freelance', color: '#059669', type: 'income' },
@@ -38,6 +38,7 @@ class StorageManager {
     if (!userId) {
       userId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       localStorage.setItem('expense_coin_user_id', userId);
+      console.log('New user initialized with ID:', userId);
     }
     return userId;
   }
@@ -48,6 +49,7 @@ class StorageManager {
     
     if (!savedSettings) {
       this.saveSettings(settings);
+      console.log('Default settings initialized for user:', this.userId);
     }
     
     return settings;
@@ -55,8 +57,25 @@ class StorageManager {
 
   private initializeDefaultData(): void {
     const existingCategories = this.getCategories();
+    const existingTransactions = this.getTransactions();
+    
+    // Only initialize categories if none exist
     if (existingCategories.length === 0) {
       this.saveCategories(defaultCategories);
+      console.log('Default categories initialized for user:', this.userId);
+    }
+    
+    // Ensure no demo transactions exist for new users
+    if (existingTransactions.length === 0) {
+      this.saveTransactions([]);
+      console.log('Clean transaction history initialized for user:', this.userId);
+    }
+    
+    // Ensure no demo budgets exist for new users
+    const existingBudgets = this.getBudgets();
+    if (existingBudgets.length === 0) {
+      this.saveBudgets([]);
+      console.log('Clean budget list initialized for user:', this.userId);
     }
   }
 
@@ -86,10 +105,10 @@ class StorageManager {
     this.saveSettings(this.settings);
     
     if (connected) {
-      console.log('Connected to Supabase. Data will now be synchronized.');
+      console.log(`Connected to Supabase for user ${this.userId}. Data will now be synchronized.`);
       this.syncToSupabase();
     } else {
-      console.log('Disconnected from Supabase. Data will be stored locally only.');
+      console.log(`Disconnected from Supabase for user ${this.userId}. Data will be stored locally only.`);
     }
   }
 
@@ -100,7 +119,7 @@ class StorageManager {
     const budgets = this.getBudgets();
     const categories = this.getCategories();
     
-    console.log('Syncing to Supabase:', {
+    console.log(`Syncing to Supabase for user ${this.userId}:`, {
       transactions: transactions.length,
       budgets: budgets.length,
       categories: categories.length,
@@ -130,6 +149,7 @@ class StorageManager {
     const transactions = this.getTransactions();
     transactions.unshift(transaction);
     this.saveTransactions(transactions);
+    console.log(`Transaction added for user ${this.userId}:`, transaction.description);
   }
 
   // Budget management
@@ -154,6 +174,7 @@ class StorageManager {
     const budgets = this.getBudgets();
     budgets.push(budget);
     this.saveBudgets(budgets);
+    console.log(`Budget added for user ${this.userId}:`, budget.id);
   }
 
   // Category management
@@ -180,9 +201,15 @@ class StorageManager {
     localStorage.removeItem(`budgets_${this.userId}`);
     localStorage.removeItem(`categories_${this.userId}`);
     
+    // Reinitialize with clean data
+    this.initializeDefaultData();
+    
     if (this.isSupabaseConnected) {
-      console.log(`Clearing Supabase data for user ${this.userId}`);
+      console.log(`Clearing and reinitializing Supabase data for user ${this.userId}`);
+      this.syncToSupabase();
     }
+    
+    console.log(`All data cleared and reinitialized for user ${this.userId}`);
   }
 }
 
