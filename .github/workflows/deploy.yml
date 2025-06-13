@@ -2,6 +2,8 @@
 name: Deploy to GitHub Pages
 
 on:
+  push:
+    branches: [ main ]
   release:
     types: [published]
   workflow_dispatch:
@@ -22,6 +24,9 @@ concurrency:
 
 jobs:
   build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -52,13 +57,13 @@ jobs:
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Log deployment reason
       run: |
         if [ "${{ github.event_name }}" = "release" ]; then
           echo "Deployed due to release: ${{ github.event.release.tag_name }}"
+        elif [ "${{ github.event_name }}" = "push" ]; then
+          echo "Deployed due to push to main branch"
         else
           echo "Manual deployment: ${{ github.event.inputs.reason }}"
         fi
