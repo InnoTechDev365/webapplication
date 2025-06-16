@@ -246,9 +246,9 @@ export const exportToExcel = (data: any, title: string, formatCurrency?: (amount
         const net = item.income - item.expenses;
         const growth = index > 0 ? (((item.income - data[index-1].income) / data[index-1].income) * 100).toFixed(1) : "0.0";
         const performance = net > 0 ? "Profitable" : "Deficit";
-        const formattedIncome = formatCurrency ? formatCurrency(item.income) : `$${item.income.toLocaleString()}`;
-        const formattedExpenses = formatCurrency ? formatCurrency(item.expenses) : `$${item.expenses.toLocaleString()}`;
-        const formattedNet = formatCurrency ? formatCurrency(net) : `$${net.toLocaleString()}`;
+        const formattedIncome = formatCurrency ? formatCurrency(item.income) : `${item.income.toLocaleString()} USD`;
+        const formattedExpenses = formatCurrency ? formatCurrency(item.expenses) : `${item.expenses.toLocaleString()} USD`;
+        const formattedNet = formatCurrency ? formatCurrency(net) : `${net.toLocaleString()} USD`;
         csvContent += `"${item.name}",${formattedIncome},${formattedExpenses},${formattedNet},${growth}%,${performance}\n`;
       });
     } else if (data.trends) {
@@ -256,9 +256,9 @@ export const exportToExcel = (data: any, title: string, formatCurrency?: (amount
         const net = item.income - item.expenses;
         const growth = index > 0 ? (((item.income - data.trends[index-1].income) / data.trends[index-1].income) * 100).toFixed(1) : "0.0";
         const performance = net > 0 ? "Profitable" : "Deficit";
-        const formattedIncome = formatCurrency ? formatCurrency(item.income) : `$${item.income.toLocaleString()}`;
-        const formattedExpenses = formatCurrency ? formatCurrency(item.expenses) : `$${item.expenses.toLocaleString()}`;
-        const formattedNet = formatCurrency ? formatCurrency(net) : `$${net.toLocaleString()}`;
+        const formattedIncome = formatCurrency ? formatCurrency(item.income) : `${item.income.toLocaleString()} USD`;
+        const formattedExpenses = formatCurrency ? formatCurrency(item.expenses) : `${item.expenses.toLocaleString()} USD`;
+        const formattedNet = formatCurrency ? formatCurrency(net) : `${net.toLocaleString()} USD`;
         csvContent += `"${item.name}",${formattedIncome},${formattedExpenses},${formattedNet},${growth}%,${performance}\n`;
       });
     }
@@ -274,7 +274,7 @@ export const exportToExcel = (data: any, title: string, formatCurrency?: (amount
         const riskLevel = category.value > total * 0.35 ? "Critical" : category.value > total * 0.25 ? "High" : category.value > total * 0.15 ? "Medium" : "Low";
         const recommendation = category.value > total * 0.3 ? "Reduce significantly" : category.value > total * 0.2 ? "Monitor closely" : "Maintain current level";
         const priority = riskLevel === "Critical" ? "Urgent" : riskLevel === "High" ? "High" : "Medium";
-        const formattedAmount = formatCurrency ? formatCurrency(category.value) : `$${category.value.toLocaleString()}`;
+        const formattedAmount = formatCurrency ? formatCurrency(category.value) : `${category.value.toLocaleString()} USD`;
         csvContent += `"${category.name}",${formattedAmount},${percentage}%,${riskLevel},${recommendation},${priority}\n`;
       });
     }
@@ -289,8 +289,8 @@ export const exportToExcel = (data: any, title: string, formatCurrency?: (amount
         cumulative += item.amount;
         const target = cumulative > item.amount * 6 ? "Above Target" : "Below Target";
         const growth = index > 0 ? (((item.amount - data.savings[index-1].amount) / data.savings[index-1].amount) * 100).toFixed(1) + "%" : "N/A";
-        const formattedAmount = formatCurrency ? formatCurrency(item.amount) : `$${item.amount.toLocaleString()}`;
-        const formattedCumulative = formatCurrency ? formatCurrency(cumulative) : `$${cumulative.toLocaleString()}`;
+        const formattedAmount = formatCurrency ? formatCurrency(item.amount) : `${item.amount.toLocaleString()} USD`;
+        const formattedCumulative = formatCurrency ? formatCurrency(cumulative) : `${cumulative.toLocaleString()} USD`;
         csvContent += `"${item.name}",${formattedAmount},${formattedCumulative},${target},${growth}\n`;
       });
       csvContent += "\n";
@@ -356,8 +356,8 @@ function generateAnalytics(data: any, formatCurrency?: (amount: number) => strin
   const savingsRate = totalIncome > 0 ? ((netSavings / totalIncome) * 100).toFixed(1) : "0.0";
   const expenseRatio = totalIncome > 0 ? totalExpenses / totalIncome : 0;
   
-  // Currency formatting
-  const defaultFormatter = (amount: number) => `$${amount.toLocaleString()}`;
+  // Currency formatting with currency codes
+  const defaultFormatter = (amount: number) => `${amount.toLocaleString()} USD`;
   const currencyFormatter = formatCurrency || defaultFormatter;
   
   // Calculate monthly growth
@@ -419,9 +419,9 @@ function generateAnalytics(data: any, formatCurrency?: (amount: number) => strin
     `${monthlyData[0].name} - ${monthlyData[monthlyData.length - 1].name} (${monthlyData.length} months)` :
     "Current period";
   
-  // Currency detection
+  // Currency detection - show currency codes
   const currency = formatCurrency ? 
-    (formatCurrency(1000).includes('€') ? 'EUR' : formatCurrency(1000).includes('₪') ? 'ILS' : 'USD') : 
+    (formatCurrency(1000).includes('EUR') ? 'EUR' : formatCurrency(1000).includes('ILS') ? 'ILS' : 'USD') : 
     'USD';
   
   // Generate recommendations
@@ -487,7 +487,7 @@ function generateAnalytics(data: any, formatCurrency?: (amount: number) => strin
     reportPeriod,
     currency,
     detailedRecommendations,
-    // Formatted currency values
+    // Formatted currency values with currency codes
     formattedIncome: currencyFormatter(totalIncome),
     formattedExpenses: currencyFormatter(totalExpenses),
     formattedSavings: currencyFormatter(netSavings),

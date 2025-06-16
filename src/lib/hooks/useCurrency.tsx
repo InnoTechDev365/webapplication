@@ -26,14 +26,13 @@ export const useCurrency = () => {
   };
 
   const formatCurrency = (amount: number): string => {
-    const formatter = new Intl.NumberFormat(navigator.language || 'en-US', {
-      style: 'currency',
-      currency: settings.currency,
+    // Format with currency code instead of symbol
+    const formattedNumber = new Intl.NumberFormat(navigator.language || 'en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
-    });
+    }).format(amount);
     
-    return formatter.format(amount);
+    return `${formattedNumber} ${settings.currency}`;
   };
 
   return {
