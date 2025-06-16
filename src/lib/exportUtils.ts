@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for exporting financial data with comprehensive analytics
  */
@@ -419,9 +418,9 @@ function generateAnalytics(data: any, formatCurrency?: (amount: number) => strin
     `${monthlyData[0].name} - ${monthlyData[monthlyData.length - 1].name} (${monthlyData.length} months)` :
     "Current period";
   
-  // Currency detection - show currency codes
+  // Currency detection - only USD and EUR supported
   const currency = formatCurrency ? 
-    (formatCurrency(1000).includes('EUR') ? 'EUR' : formatCurrency(1000).includes('ILS') ? 'ILS' : 'USD') : 
+    (formatCurrency(1000).includes('EUR') ? 'EUR' : 'USD') : 
     'USD';
   
   // Generate recommendations

@@ -6,11 +6,18 @@ import { UserSettings } from '../types';
 
 export const useCurrency = () => {
   const [settings, setSettings] = useState<UserSettings>(storageManager.getSettings());
-  const availableCurrencies = ['USD', 'EUR', 'ILS'];
+  const availableCurrencies = ['USD', 'EUR'];
   
   useEffect(() => {
     // Initialize with stored settings
     const storedSettings = storageManager.getSettings();
+    
+    // If current currency is ILS, default to USD
+    if (storedSettings.currency === 'ILS') {
+      storedSettings.currency = 'USD';
+      storageManager.setCurrency('USD');
+    }
+    
     setSettings(storedSettings);
   }, []);
   
