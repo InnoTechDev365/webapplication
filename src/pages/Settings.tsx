@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileSection } from "@/components/Settings/ProfileSection";
 import { NotificationsSection } from "@/components/Settings/NotificationsSection";
 import { PreferencesSection } from "@/components/Settings/PreferencesSection";
+import { PreferencesSectionAlt } from "@/components/Settings/PreferencesSectionAlt";
 import { AppearanceSection } from "@/components/Settings/AppearanceSection";
 
 const Settings = () => {
@@ -18,6 +19,7 @@ const Settings = () => {
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="preferences">Preferences</TabsTrigger>
+          <TabsTrigger value="preferences-alt">Preferences Alt</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
         </TabsList>
         
@@ -31,6 +33,10 @@ const Settings = () => {
         
         <TabsContent value="preferences">
           <PreferencesSection />
+        </TabsContent>
+        
+        <TabsContent value="preferences-alt">
+          <PreferencesSectionAlt />
         </TabsContent>
         
         <TabsContent value="appearance">
