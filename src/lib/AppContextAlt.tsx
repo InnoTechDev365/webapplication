@@ -9,7 +9,7 @@ interface AppContextAltType {
   isSupabaseConnected: boolean;
   isLoading: boolean;
   lastSyncTime: string | null;
-  connectToSupabase: () => Promise<void>;
+  connectToSupabase: (url: string, anonKey: string) => Promise<void>;
   disconnectFromSupabase: () => Promise<void>;
   syncData: () => Promise<void>;
   availableCurrencies: string[];

@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { storageManager } from '../storage';
 import { toast } from 'sonner';
+import { setSupabaseCredentials, clearSupabaseCredentials, hasSupabaseCredentials } from '../supabaseClient';
+import { testConnection } from '../remoteSync';
+
 
 interface SupabaseConnectionState {
   isConnected: boolean;
@@ -34,12 +37,16 @@ export const useSupabaseAlt = () => {
     return () => clearInterval(interval);
   }, []);
   
-  const connectToSupabase = useCallback(async () => {
+  const connectToSupabase = useCallback(async (url: string, anonKey: string) => {
     setConnectionState(prev => ({ ...prev, isLoading: true }));
     
     try {
-      // Simulate connection process
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Save credentials and verify connection
+      setSupabaseCredentials(url, anonKey);
+      const result = await testConnection();
+      if (!result.ok) {
+        throw result.error || new Error('Unable to connect to Supabase');
+      }
       
       // Connect to Supabase and sync existing local data
       storageManager.connectToSupabase(true);
@@ -48,25 +55,26 @@ export const useSupabaseAlt = () => {
       const transactions = storageManager.getTransactions();
       const budgets = storageManager.getBudgets();
       const categories = storageManager.getCategories();
+      const settings = storageManager.getSettings();
       
       if (transactions.length > 0) storageManager.saveTransactions(transactions);
       if (budgets.length > 0) storageManager.saveBudgets(budgets);
       if (categories.length > 0) storageManager.saveCategories(categories);
-      
-      // Update last sync time
-      const now = new Date().toISOString();
-      localStorage.setItem('supabase_last_sync', now);
+      // Also sync settings
+      // Note: settings sync is handled in storage via saveSettings; invoke to ensure upsert
+      localStorage.setItem('supabase_last_sync', new Date().toISOString());
       
       setConnectionState({
         isConnected: true,
         isLoading: false,
-        lastSyncTime: now
+        lastSyncTime: localStorage.getItem('supabase_last_sync')
       });
       
-      toast.success('Successfully connected to Supabase cloud storage');
+      toast.success('Successfully connected to your Supabase');
     } catch (error) {
+      clearSupabaseCredentials();
       setConnectionState(prev => ({ ...prev, isLoading: false }));
-      toast.error('Failed to connect to Supabase. Please try again.');
+      toast.error('Failed to connect to Supabase. Check URL and anon key.');
     }
   }, []);
 
@@ -75,9 +83,10 @@ export const useSupabaseAlt = () => {
     
     try {
       // Simulate disconnection process
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       storageManager.connectToSupabase(false);
+      clearSupabaseCredentials();
       localStorage.removeItem('supabase_last_sync');
       
       setConnectionState({
@@ -94,15 +103,14 @@ export const useSupabaseAlt = () => {
   }, []);
 
   const syncData = useCallback(async () => {
-    if (!connectionState.isConnected) return;
+    if (!connectionState.isConnected || !hasSupabaseCredentials()) return;
     
     try {
-      // Simulate sync process
+      // Sync process: push local snapshot up
       const transactions = storageManager.getTransactions();
       const budgets = storageManager.getBudgets();
       const categories = storageManager.getCategories();
       
-      // Save to simulate sync
       storageManager.saveTransactions(transactions);
       storageManager.saveBudgets(budgets);
       storageManager.saveCategories(categories);

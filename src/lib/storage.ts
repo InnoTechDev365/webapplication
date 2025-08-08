@@ -1,5 +1,7 @@
 
 import { Transaction, Budget, Category, UserSettings } from './types';
+import { syncTransactions, syncBudgets, syncCategories, syncSettings } from './remoteSync';
+import { hasSupabaseCredentials } from './supabaseClient';
 
 // Default user settings
 const defaultSettings: UserSettings = {
@@ -80,6 +82,10 @@ class StorageManager {
   }
 
   // Public API methods
+  getUserId(): string {
+    return this.userId;
+  }
+
   getSettings(): UserSettings {
     return { ...this.settings };
   }
@@ -140,8 +146,12 @@ class StorageManager {
   saveTransactions(transactions: Transaction[]): void {
     localStorage.setItem(`transactions_${this.userId}`, JSON.stringify(transactions));
     
-    if (this.isSupabaseConnected) {
-      console.log(`Syncing ${transactions.length} transactions to Supabase for user ${this.userId}`);
+    if (this.isSupabaseConnected && hasSupabaseCredentials()) {
+      syncTransactions(this.userId, transactions)
+        .then(() => {
+          localStorage.setItem('supabase_last_sync', new Date().toISOString());
+        })
+        .catch(() => {});
     }
   }
 
@@ -165,8 +175,12 @@ class StorageManager {
   saveBudgets(budgets: Budget[]): void {
     localStorage.setItem(`budgets_${this.userId}`, JSON.stringify(budgets));
     
-    if (this.isSupabaseConnected) {
-      console.log(`Syncing ${budgets.length} budgets to Supabase for user ${this.userId}`);
+    if (this.isSupabaseConnected && hasSupabaseCredentials()) {
+      syncBudgets(this.userId, budgets)
+        .then(() => {
+          localStorage.setItem('supabase_last_sync', new Date().toISOString());
+        })
+        .catch(() => {});
     }
   }
 
@@ -190,8 +204,12 @@ class StorageManager {
   saveCategories(categories: Category[]): void {
     localStorage.setItem(`categories_${this.userId}`, JSON.stringify(categories));
     
-    if (this.isSupabaseConnected) {
-      console.log(`Syncing ${categories.length} categories to Supabase for user ${this.userId}`);
+    if (this.isSupabaseConnected && hasSupabaseCredentials()) {
+      syncCategories(this.userId, categories)
+        .then(() => {
+          localStorage.setItem('supabase_last_sync', new Date().toISOString());
+        })
+        .catch(() => {});
     }
   }
 

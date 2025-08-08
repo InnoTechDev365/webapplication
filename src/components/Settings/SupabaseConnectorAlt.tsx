@@ -18,8 +18,8 @@ export const SupabaseConnectorAlt = () => {
     syncData 
   } = useSupabaseAlt();
 
-  const handleConnect = async () => {
-    await connectToSupabase();
+  const handleConnect = async (url: string, anonKey: string) => {
+    await connectToSupabase(url, anonKey);
   };
 
   const handleDisconnect = async () => {
@@ -114,7 +114,7 @@ export const SupabaseConnectorAlt = () => {
             ) : (
               <>
                 <Button
-                  onClick={handleConnect}
+                  onClick={() => setShowDialog(true)}
                   disabled={isLoading}
                   className="w-full"
                 >

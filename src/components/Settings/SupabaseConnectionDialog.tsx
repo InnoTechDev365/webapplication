@@ -16,38 +16,32 @@ import { toast } from 'sonner';
 interface SupabaseConnectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConnect: () => void;
+  onConnect: (url: string, anonKey: string) => Promise<void> | void;
 }
 
 export const SupabaseConnectionDialog = ({ open, onOpenChange, onConnect }: SupabaseConnectionDialogProps) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [url, setUrl] = useState('');
+  const [anonKey, setAnonKey] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
 
   const handleConnect = async () => {
-    if (!email || !password) {
-      toast.error('Please enter your email and password');
+    if (!url || !anonKey) {
+      toast.error('Please enter your Supabase URL and anon key');
       return;
     }
 
     setIsConnecting(true);
     
-    // Simulate connection process
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await onConnect(url, anonKey);
       setIsConnected(true);
       toast.success('Successfully connected to Supabase!');
-      
-      // Wait a moment to show success state
+
       setTimeout(() => {
-        onConnect();
         onOpenChange(false);
         resetDialog();
-      }, 1500);
-      
+      }, 1200);
     } catch (error) {
       toast.error('Failed to connect to Supabase');
       setIsConnecting(false);
@@ -55,8 +49,8 @@ export const SupabaseConnectionDialog = ({ open, onOpenChange, onConnect }: Supa
   };
 
   const resetDialog = () => {
-    setEmail('');
-    setPassword('');
+    setUrl('');
+    setAnonKey('');
     setIsConnecting(false);
     setIsConnected(false);
   };
@@ -74,10 +68,10 @@ export const SupabaseConnectionDialog = ({ open, onOpenChange, onConnect }: Supa
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Database className="h-5 w-5" />
-            Connect to Supabase
+            Connect your Supabase (BYO)
           </DialogTitle>
           <DialogDescription>
-            Sign in to sync your data with Supabase. Your data will be stored both locally and in the cloud.
+            Paste your Supabase project URL and anon key. Your data will be saved locally and mirrored to your Supabase.
           </DialogDescription>
         </DialogHeader>
         
@@ -92,24 +86,24 @@ export const SupabaseConnectionDialog = ({ open, onOpenChange, onConnect }: Supa
         ) : (
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="url">Supabase URL</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="url"
+                type="url"
+                placeholder="https://your-project.supabase.co"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
                 disabled={isConnecting}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="anon">Anon Key</Label>
               <Input
-                id="password"
+                id="anon"
                 type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Paste anon public key"
+                value={anonKey}
+                onChange={(e) => setAnonKey(e.target.value)}
                 disabled={isConnecting}
               />
             </div>
@@ -117,16 +111,16 @@ export const SupabaseConnectionDialog = ({ open, onOpenChange, onConnect }: Supa
             <div className="rounded-md bg-blue-50 border border-blue-200 p-3">
               <div className="text-sm text-blue-800 space-y-1">
                 <div className="font-medium">What happens when you connect:</div>
-                <div>• Your existing data will be uploaded to Supabase</div>
-                <div>• Future data will be saved both locally and in Supabase</div>
-                <div>• You can access your data from any device</div>
+                <div>• Your existing local data will be uploaded to your Supabase</div>
+                <div>• Future data saves locally and syncs to your Supabase</div>
+                <div>• Disconnect any time to stay local-only</div>
               </div>
             </div>
             
             <Button 
               onClick={handleConnect} 
               className="w-full"
-              disabled={!email || !password || isConnecting}
+              disabled={!url || !anonKey || isConnecting}
             >
               {isConnecting ? (
                 <>
@@ -136,7 +130,7 @@ export const SupabaseConnectionDialog = ({ open, onOpenChange, onConnect }: Supa
               ) : (
                 <>
                   <Database className="mr-2 h-4 w-4" />
-                  Connect to Supabase
+                  Connect
                 </>
               )}
             </Button>
