@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useAppContextAlt } from "@/lib/AppContextAlt";
 import { CurrencySelector } from "@/components/Settings/CurrencySelector";
 import { SupabaseConnectorAlt } from "@/components/Settings/SupabaseConnectorAlt";
-
+import { SupabaseSetupHelp } from "@/components/Settings/SupabaseSetupHelp";
 export const PreferencesSectionAlt = () => {
   const handleSavePreferences = () => {
     toast.success("Preferences saved successfully");
@@ -32,6 +32,8 @@ export const PreferencesSectionAlt = () => {
             <SupabaseConnectorAlt />
           </div>
         </div>
+        <Separator />
+        <SupabaseSetupHelp />
       </CardContent>
       <CardFooter>
         <Button onClick={handleSavePreferences}>Save Changes</Button>
