@@ -7,6 +7,8 @@ import { useAppContextAlt } from "@/lib/AppContextAlt";
 import { CurrencySelector } from "@/components/Settings/CurrencySelector";
 import { SupabaseConnectorAlt } from "@/components/Settings/SupabaseConnectorAlt";
 import { SupabaseSetupHelp } from "@/components/Settings/SupabaseSetupHelp";
+import { DataResetSection } from "@/components/Settings/DataResetSection";
+
 export const PreferencesSectionAlt = () => {
   const handleSavePreferences = () => {
     toast.success("Preferences saved successfully");
@@ -34,6 +36,8 @@ export const PreferencesSectionAlt = () => {
         </div>
         <Separator />
         <SupabaseSetupHelp />
+        <Separator />
+        <DataResetSection />
       </CardContent>
       <CardFooter>
         <Button onClick={handleSavePreferences}>Save Changes</Button>
