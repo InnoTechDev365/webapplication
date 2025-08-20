@@ -116,6 +116,10 @@ export const exportToExcel = (data: ExportData, title: string, formatCurrency?: 
     csvContent += `Expense Ratio,${(analytics.expenseRatio * 100).toFixed(1)}%,70-80%,${analytics.expenseRatio < 0.7 ? 'Excellent' : analytics.expenseRatio < 0.8 ? 'Good' : 'Poor'}\n`;
     csvContent += `Savings Rate,${analytics.savingsRate}%,20%+,${parseFloat(analytics.savingsRate) >= 20 ? 'Excellent' : parseFloat(analytics.savingsRate) >= 10 ? 'Good' : 'Poor'}\n`;
     csvContent += `Investment Readiness,${analytics.investmentScore}/10,7+,${analytics.investmentScore >= 7 ? 'Ready' : analytics.investmentScore >= 5 ? 'Nearly Ready' : 'Not Ready'}\n`;
+    csvContent += `\n## APPENDIX\n`;
+    csvContent += `Currency Independence,Currency values displayed as entered,N/A,No automatic conversions applied\n`;
+    csvContent += `Exchange Rates,No automatic conversions applied,N/A,Multi-currency data reflects nominal amounts only\n`;
+    csvContent += `Multi-Currency Support,Reflects nominal amounts only,N/A,Users responsible for currency interpretation\n`;
     
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     downloadFile(blob, `Comprehensive_Financial_Report_${new Date().toISOString().split('T')[0]}.csv`);
