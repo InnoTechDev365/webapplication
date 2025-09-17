@@ -1,4 +1,8 @@
 
 # Financial Dashboard Application
 
-This application is currently under development.
+## Development Status
+
+This project is currently under development.
+
+**Latest Update**: Enhanced Analytics with swipe functionality and period selection for all devices.

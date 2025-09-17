@@ -66,21 +66,6 @@ export class DataService {
     return balance;
   }
 
-  getSpendingByCategory(): Record<string, number> {
-    const transactions = this.getTransactions();
-    const expenses = transactions.filter(t => t.type === 'expense');
-    const spending: Record<string, number> = {};
-
-    expenses.forEach(expense => {
-      const category = this.getCategoryById(expense.category);
-      const categoryName = category?.name || 'Uncategorized';
-      spending[categoryName] = (spending[categoryName] || 0) + expense.amount;
-    });
-
-    console.log('Spending by category calculated:', spending);
-    return spending;
-  }
-
   getIncomeByCategory(): Record<string, number> {
     const transactions = this.getTransactions();
     const incomes = transactions.filter(t => t.type === 'income');
@@ -107,51 +92,119 @@ export class DataService {
     return recent;
   }
 
-  // Generate trend data from transactions
-  getTrendData(): Array<{ name: string; income: number; expenses: number }> {
+  // Generate trend data from transactions with period filtering
+  getTrendData(periodDays?: number): Array<{ name: string; income: number; expenses: number }> {
     const transactions = this.getTransactions();
-    const monthlyData: Record<string, { income: number; expenses: number }> = {};
+    const days = periodDays || 180; // Default to 6 months
     
-    // Get last 7 months of data
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const currentDate = new Date();
-    const trendMonths: string[] = [];
+    // Filter transactions within the period
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
     
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
-      const monthName = months[date.getMonth()];
-      trendMonths.push(monthName);
-      monthlyData[monthName] = { income: 0, expenses: 0 };
-    }
+    const filteredTransactions = transactions.filter(transaction => 
+      new Date(transaction.date) >= cutoffDate
+    );
     
-    // Aggregate transactions by month
-    transactions.forEach(transaction => {
-      const transactionDate = new Date(transaction.date);
-      const monthName = months[transactionDate.getMonth()];
+    // For shorter periods, group by days/weeks. For longer periods, group by months
+    if (days <= 30) {
+      // Group by days for periods <= 30 days
+      const dailyData: Record<string, { income: number; expenses: number }> = {};
+      const dateKeys: string[] = [];
       
-      if (monthlyData[monthName]) {
-        if (transaction.type === 'income') {
-          monthlyData[monthName].income += transaction.amount;
-        } else {
-          monthlyData[monthName].expenses += transaction.amount;
-        }
+      for (let i = days - 1; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateKey = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        dateKeys.push(dateKey);
+        dailyData[dateKey] = { income: 0, expenses: 0 };
       }
-    });
-    
-    return trendMonths.map(month => ({
-      name: month,
-      income: monthlyData[month].income,
-      expenses: monthlyData[month].expenses
-    }));
+      
+      filteredTransactions.forEach(transaction => {
+        const transactionDate = new Date(transaction.date);
+        const dateKey = transactionDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        
+        if (dailyData[dateKey]) {
+          if (transaction.type === 'income') {
+            dailyData[dateKey].income += transaction.amount;
+          } else {
+            dailyData[dateKey].expenses += transaction.amount;
+          }
+        }
+      });
+      
+      return dateKeys.map(dateKey => ({
+        name: dateKey,
+        income: dailyData[dateKey].income,
+        expenses: dailyData[dateKey].expenses
+      }));
+    } else {
+      // Group by months for longer periods
+      const monthlyData: Record<string, { income: number; expenses: number }> = {};
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const currentDate = new Date();
+      const trendMonths: string[] = [];
+      const monthsToShow = Math.min(Math.ceil(days / 30), 12);
+      
+      for (let i = monthsToShow - 1; i >= 0; i--) {
+        const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+        const monthName = months[date.getMonth()];
+        trendMonths.push(monthName);
+        monthlyData[monthName] = { income: 0, expenses: 0 };
+      }
+      
+      filteredTransactions.forEach(transaction => {
+        const transactionDate = new Date(transaction.date);
+        const monthName = months[transactionDate.getMonth()];
+        
+        if (monthlyData[monthName]) {
+          if (transaction.type === 'income') {
+            monthlyData[monthName].income += transaction.amount;
+          } else {
+            monthlyData[monthName].expenses += transaction.amount;
+          }
+        }
+      });
+      
+      return trendMonths.map(month => ({
+        name: month,
+        income: monthlyData[month].income,
+        expenses: monthlyData[month].expenses
+      }));
+    }
   }
 
-  // Generate savings data from transactions
-  getSavingsData(): Array<{ name: string; amount: number }> {
-    const trendData = this.getTrendData();
+  // Generate savings data from transactions with period filtering
+  getSavingsData(periodDays?: number): Array<{ name: string; amount: number }> {
+    const trendData = this.getTrendData(periodDays);
     return trendData.map(month => ({
       name: month.name,
       amount: Math.max(0, month.income - month.expenses) // Savings is positive net income
     }));
+  }
+
+  // Get spending by category with period filtering
+  getSpendingByCategory(periodDays?: number): Record<string, number> {
+    const transactions = this.getTransactions();
+    let filteredTransactions = transactions.filter(t => t.type === 'expense');
+    
+    if (periodDays) {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - periodDays);
+      filteredTransactions = filteredTransactions.filter(transaction => 
+        new Date(transaction.date) >= cutoffDate
+      );
+    }
+    
+    const spending: Record<string, number> = {};
+
+    filteredTransactions.forEach(expense => {
+      const category = this.getCategoryById(expense.category);
+      const categoryName = category?.name || 'Uncategorized';
+      spending[categoryName] = (spending[categoryName] || 0) + expense.amount;
+    });
+
+    console.log('Spending by category calculated:', spending);
+    return spending;
   }
 
   // Clear all user data

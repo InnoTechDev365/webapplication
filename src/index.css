@@ -267,6 +267,12 @@
     min-height: 44px;
     min-width: 44px;
   }
+
+  /* Swipe gestures optimization */
+  .swipeable {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
 }
 
 @media (max-width: 480px) {
