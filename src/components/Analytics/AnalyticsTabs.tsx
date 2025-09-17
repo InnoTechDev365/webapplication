@@ -23,10 +23,10 @@ export function AnalyticsTabs({
 
   return (
     <Tabs defaultValue="trends" className="space-y-4">
-      <TabsList className="flex flex-wrap">
-        <TabsTrigger value="trends">Trends</TabsTrigger>
-        <TabsTrigger value="comparison">Comparison</TabsTrigger>
-        <TabsTrigger value="categories">Categories</TabsTrigger>
+      <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto">
+        <TabsTrigger value="trends" className="text-xs sm:text-sm">Trends</TabsTrigger>
+        <TabsTrigger value="comparison" className="text-xs sm:text-sm">Comparison</TabsTrigger>
+        <TabsTrigger value="categories" className="text-xs sm:text-sm">Categories</TabsTrigger>
       </TabsList>
       
       <TabsContent value="trends" className="space-y-4">

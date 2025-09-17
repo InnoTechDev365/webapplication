@@ -18,26 +18,9 @@ const Analytics = () => {
     color: `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`
   }));
 
-  // Mock data for trends (would be calculated from real data in a full implementation)
-  const trendData = [
-    { name: 'Jan', income: 0, expenses: 0 },
-    { name: 'Feb', income: 0, expenses: 0 },
-    { name: 'Mar', income: 0, expenses: 0 },
-    { name: 'Apr', income: 0, expenses: 0 },
-    { name: 'May', income: 0, expenses: 0 },
-    { name: 'Jun', income: 0, expenses: 0 },
-    { name: 'Jul', income: 0, expenses: 0 },
-  ];
-
-  const savingsData = [
-    { name: 'Jan', amount: 0 },
-    { name: 'Feb', amount: 0 },
-    { name: 'Mar', amount: 0 },
-    { name: 'Apr', amount: 0 },
-    { name: 'May', amount: 0 },
-    { name: 'Jun', amount: 0 },
-    { name: 'Jul', amount: 0 },
-  ];
+  // Use real data for trends and savings
+  const trendData = dataService.getTrendData();
+  const savingsData = dataService.getSavingsData();
 
   return (
     <div className="space-y-6 animate-fade-in">

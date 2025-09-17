@@ -2,6 +2,7 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppContext } from '@/lib/AppContext';
+import { useState, useEffect } from 'react';
 
 interface IncomeExpenseData {
   name: string;
@@ -16,6 +17,14 @@ interface IncomeExpenseChartProps {
 
 export function ChartBar({ data, title }: IncomeExpenseChartProps) {
   const { formatCurrency } = useAppContext();
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  // Update window width when resized
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   return (
     <Card>
@@ -23,22 +32,42 @@ export function ChartBar({ data, title }: IncomeExpenseChartProps) {
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-80">
+        <div className="h-60 sm:h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={data}
               margin={{
                 top: 20,
-                right: 30,
-                left: 20,
+                right: windowWidth < 640 ? 10 : 30,
+                left: windowWidth < 640 ? 0 : 20,
                 bottom: 5,
               }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis tickFormatter={(value) => formatCurrency(value)} />
-              <Tooltip formatter={(value: number) => [formatCurrency(value), '']} />
-              <Legend />
+              <XAxis 
+                dataKey="name" 
+                tick={{ fontSize: windowWidth < 640 ? 10 : 12 }}
+              />
+              <YAxis 
+                tickFormatter={(value) => formatCurrency(value)}
+                tick={{ fontSize: windowWidth < 640 ? 10 : 12 }}
+                width={windowWidth < 640 ? 40 : 60}
+              />
+              <Tooltip 
+                formatter={(value: number) => [formatCurrency(value), '']}
+                contentStyle={{
+                  backgroundColor: 'white',
+                  border: '1px solid #ccc',
+                  borderRadius: '6px',
+                  fontSize: windowWidth < 640 ? '12px' : '14px'
+                }}
+              />
+              <Legend 
+                wrapperStyle={{ 
+                  paddingTop: 10, 
+                  fontSize: windowWidth < 640 ? 10 : 12 
+                }} 
+              />
               <Bar dataKey="income" name="Income" fill="#10B981" />
               <Bar dataKey="expenses" name="Expenses" fill="#EF4444" />
             </BarChart>

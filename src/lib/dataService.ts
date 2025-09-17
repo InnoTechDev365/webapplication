@@ -107,6 +107,53 @@ export class DataService {
     return recent;
   }
 
+  // Generate trend data from transactions
+  getTrendData(): Array<{ name: string; income: number; expenses: number }> {
+    const transactions = this.getTransactions();
+    const monthlyData: Record<string, { income: number; expenses: number }> = {};
+    
+    // Get last 7 months of data
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentDate = new Date();
+    const trendMonths: string[] = [];
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const monthName = months[date.getMonth()];
+      trendMonths.push(monthName);
+      monthlyData[monthName] = { income: 0, expenses: 0 };
+    }
+    
+    // Aggregate transactions by month
+    transactions.forEach(transaction => {
+      const transactionDate = new Date(transaction.date);
+      const monthName = months[transactionDate.getMonth()];
+      
+      if (monthlyData[monthName]) {
+        if (transaction.type === 'income') {
+          monthlyData[monthName].income += transaction.amount;
+        } else {
+          monthlyData[monthName].expenses += transaction.amount;
+        }
+      }
+    });
+    
+    return trendMonths.map(month => ({
+      name: month,
+      income: monthlyData[month].income,
+      expenses: monthlyData[month].expenses
+    }));
+  }
+
+  // Generate savings data from transactions
+  getSavingsData(): Array<{ name: string; amount: number }> {
+    const trendData = this.getTrendData();
+    return trendData.map(month => ({
+      name: month.name,
+      amount: Math.max(0, month.income - month.expenses) // Savings is positive net income
+    }));
+  }
+
   // Clear all user data
   clearAllData(): void {
     storageManager.clearAllData();
