@@ -25,6 +25,9 @@ export const SavingsTrend = ({ data }: SavingsTrendProps) => {
 
   // Update window width when resized
   useEffect(() => {
+    // Only run in browser environment
+    if (typeof window === 'undefined') return;
+    
     // Set initial window width
     setWindowWidth(window.innerWidth);
     
