@@ -21,10 +21,13 @@ interface SavingsTrendProps {
 
 export const SavingsTrend = ({ data }: SavingsTrendProps) => {
   const { formatCurrency } = useAppContext();
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [windowWidth, setWindowWidth] = useState(1024); // Safe default
 
   // Update window width when resized
   useEffect(() => {
+    // Set initial window width
+    setWindowWidth(window.innerWidth);
+    
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
