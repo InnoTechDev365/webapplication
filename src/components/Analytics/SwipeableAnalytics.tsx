@@ -100,6 +100,9 @@ export function SwipeableAnalytics({
 
   // Keyboard navigation
   useEffect(() => {
+    // Only add event listeners in browser environment
+    if (typeof window === 'undefined') return;
+    
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft" && activeTab > 0) {
         setActiveTab(activeTab - 1);

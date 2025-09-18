@@ -4,17 +4,19 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
-// Polyfills for older browsers
-if (!window.requestAnimationFrame) {
-  window.requestAnimationFrame = function(callback) {
-    return setTimeout(callback, 16);
-  };
-}
+// Polyfills for older browsers - only in browser environment
+if (typeof window !== 'undefined') {
+  if (!window.requestAnimationFrame) {
+    window.requestAnimationFrame = function(callback) {
+      return setTimeout(callback, 16);
+    };
+  }
 
-if (!window.cancelAnimationFrame) {
-  window.cancelAnimationFrame = function(id) {
-    clearTimeout(id);
-  };
+  if (!window.cancelAnimationFrame) {
+    window.cancelAnimationFrame = function(id) {
+      clearTimeout(id);
+    };
+  }
 }
 
 // Error boundary for React
@@ -46,7 +48,11 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
         <div className="error-boundary">
           <h1>Something went wrong</h1>
           <p>Please refresh the page to continue.</p>
-          <button onClick={() => window.location.reload()}>
+          <button onClick={() => {
+            if (typeof window !== 'undefined') {
+              window.location.reload();
+            }
+          }}>
             Refresh Page
           </button>
         </div>

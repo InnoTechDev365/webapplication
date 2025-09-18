@@ -15,7 +15,11 @@ export const DataResetSection = () => {
       dataService.clearAllData();
       toast.success("All financial data has been reset successfully");
       // Reload the page to reflect the reset state
-      setTimeout(() => window.location.reload(), 1000);
+      setTimeout(() => {
+        if (typeof window !== 'undefined') {
+          window.location.reload();
+        }
+      }, 1000);
     } catch (error) {
       toast.error("Failed to reset data. Please try again.");
       console.error("Reset failed:", error);
