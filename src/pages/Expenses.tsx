@@ -4,20 +4,43 @@ import { Transaction } from "@/lib/types";
 import { dataService } from "@/lib/dataService";
 import { ExpenseForm } from "@/components/Expenses/ExpenseForm";
 import { ExpensesTable } from "@/components/Expenses/ExpensesTable";
+import { toast } from "sonner";
 
 const Expenses = () => {
   const [expenses, setExpenses] = useState<Transaction[]>([]);
 
-  useEffect(() => {
-    // Load real expense data
+  const refresh = () => {
     const allTransactions = dataService.getTransactions();
     const expenseTransactions = allTransactions.filter(transaction => transaction.type === 'expense');
     setExpenses(expenseTransactions);
+  };
+
+  useEffect(() => {
+    refresh();
   }, []);
 
   const handleAddExpense = (newExpense: Transaction) => {
     dataService.addTransaction(newExpense);
     setExpenses([newExpense, ...expenses]);
+  };
+
+  const handleDelete = (id: string) => {
+    dataService.deleteTransaction(id);
+    refresh();
+    toast.success('Expense deleted');
+  };
+
+  const handleEdit = (tx: Transaction) => {
+    const desc = window.prompt('Edit description', tx.description) ?? tx.description;
+    const amountStr = window.prompt('Edit amount', String(tx.amount)) ?? String(tx.amount);
+    const amount = parseFloat(amountStr);
+    if (!isNaN(amount)) {
+      dataService.updateTransaction({ ...tx, description: desc, amount });
+      refresh();
+      toast.success('Expense updated');
+    } else {
+      toast.error('Invalid amount');
+    }
   };
 
   return (
@@ -34,6 +57,8 @@ const Expenses = () => {
       <ExpensesTable 
         expenses={expenses} 
         getCategoryById={dataService.getCategoryById.bind(dataService)} 
+        onDelete={handleDelete}
+        onEdit={handleEdit}
       />
     </div>
   );

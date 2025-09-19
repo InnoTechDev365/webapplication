@@ -1,6 +1,5 @@
 
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { storageManager } from './storage';
+import React, { createContext, useContext, ReactNode } from 'react';
 import { useCurrency } from './hooks/useCurrency';
 import { useSupabase } from './hooks/useSupabase';
 
@@ -8,8 +7,8 @@ interface AppContextType {
   currency: string;
   setCurrency: (currency: string) => void;
   isSupabaseConnected: boolean;
-  connectToSupabase: () => void;
-  disconnectFromSupabase: () => void;
+  connectToSupabase: (url: string, anonKey: string) => Promise<void>;
+  disconnectFromSupabase: () => Promise<void> | void;
   availableCurrencies: string[];
   formatCurrency: (amount: number) => string;
 }

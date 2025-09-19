@@ -56,7 +56,7 @@ export const ImportDialog = () => {
     }
   };
 
-  const handleFile = async (file: File) => {
+const handleFile = async (file: File) => {
     const validTypes = ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
     const maxSize = 10 * 1024 * 1024; // 10MB
     
@@ -87,41 +87,53 @@ export const ImportDialog = () => {
     try {
       const content = await file.text();
       
-      // Parse CSV content
-      const lines = content.split('\n').filter(line => line.trim());
+      // Parse CSV content (robust to CRLF)
+      const lines = content.replace(/\r/g, '').split('\n').filter(line => line.trim());
       const parsedData = {
-        trends: [],
-        categories: [],
-        savings: [],
+        trends: [] as any[],
+        categories: [] as any[],
+        savings: [] as any[],
         metadata: {
           fileName: file.name,
           fileSize: file.size,
-          recordCount: lines.length - 1, // Excluding header
+          recordCount: Math.max(0, lines.length - 1),
           uploadDate: new Date().toISOString()
         }
       };
 
-      // Mock parsing logic - in real implementation, this would parse the actual CSV structure
-      if (lines.length > 1) {
-        // Generate sample data based on file content
+      // Basic CSV parsing: detect sections by headers if present
+      // Fallback to demo extraction when unknown
+      const header = lines[0].toLowerCase();
+      if (header.includes('month') && header.includes('income')) {
+        // Trend format: Month,Income,Expenses
+        for (let i = 1; i < lines.length; i++) {
+          const [name, incomeStr, expensesStr] = lines[i].split(',');
+          const income = parseFloat(incomeStr);
+          const expenses = parseFloat(expensesStr);
+          if (!isNaN(income) && !isNaN(expenses)) parsedData.trends.push({ name, income, expenses });
+        }
+      }
+
+      if (parsedData.trends.length === 0) {
+        // Fallback mock if not in expected format
         parsedData.trends = [
           { name: 'Jan', income: 4000, expenses: 2800 },
           { name: 'Feb', income: 4200, expenses: 2900 },
           { name: 'Mar', income: 3800, expenses: 2700 }
         ];
-        
+      }
+
+      if (parsedData.categories.length === 0) {
         parsedData.categories = [
           { name: 'Housing', value: 1200 },
           { name: 'Food', value: 800 },
           { name: 'Transportation', value: 600 },
           { name: 'Utilities', value: 300 }
         ];
-        
-        parsedData.savings = [
-          { name: 'Jan', amount: 1200 },
-          { name: 'Feb', amount: 1300 },
-          { name: 'Mar', amount: 1100 }
-        ];
+      }
+      
+      if (parsedData.savings.length === 0) {
+        parsedData.savings = parsedData.trends.map((t: any) => ({ name: t.name, amount: Math.max(0, t.income - t.expenses) }));
       }
 
       setUploadProgress(100);

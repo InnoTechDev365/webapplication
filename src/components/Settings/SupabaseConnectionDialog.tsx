@@ -41,7 +41,7 @@ export const SupabaseConnectionDialog = ({ open, onOpenChange, onConnect }: Supa
       setTimeout(() => {
         onOpenChange(false);
         resetDialog();
-      }, 1200);
+      }, 800);
     } catch (error) {
       toast.error('Failed to connect to Supabase');
       setIsConnecting(false);

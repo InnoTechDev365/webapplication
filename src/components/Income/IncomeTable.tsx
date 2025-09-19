@@ -9,13 +9,17 @@ import {
   TableBody, 
   TableCell 
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Pencil, Trash2 } from "lucide-react";
 
 interface IncomeTableProps {
   incomes: Transaction[];
   getCategoryById: (id: string) => any;
+  onEdit?: (tx: Transaction) => void;
+  onDelete?: (id: string) => void;
 }
 
-export const IncomeTable = ({ incomes, getCategoryById }: IncomeTableProps) => {
+export const IncomeTable = ({ incomes, getCategoryById, onEdit, onDelete }: IncomeTableProps) => {
   function formatDate(dateString: string): string {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', {
@@ -38,6 +42,7 @@ export const IncomeTable = ({ incomes, getCategoryById }: IncomeTableProps) => {
               <TableHead>Description</TableHead>
               <TableHead>Category</TableHead>
               <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="w-[110px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -50,6 +55,14 @@ export const IncomeTable = ({ incomes, getCategoryById }: IncomeTableProps) => {
                   <TableCell>{category?.name || 'Uncategorized'}</TableCell>
                   <TableCell className="text-right font-medium text-income">
                     +${income.amount.toFixed(2)}
+                  </TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <Button size="sm" variant="outline" onClick={() => onEdit?.(income)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => onDelete?.(income.id)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               );

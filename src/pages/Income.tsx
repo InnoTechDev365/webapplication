@@ -4,20 +4,43 @@ import { Transaction } from "@/lib/types";
 import { dataService } from "@/lib/dataService";
 import { IncomeForm } from "@/components/Income/IncomeForm";
 import { IncomeTable } from "@/components/Income/IncomeTable";
+import { toast } from "sonner";
 
 const Income = () => {
   const [incomes, setIncomes] = useState<Transaction[]>([]);
 
-  useEffect(() => {
-    // Load real income data
+  const refresh = () => {
     const allTransactions = dataService.getTransactions();
     const incomeTransactions = allTransactions.filter(transaction => transaction.type === 'income');
     setIncomes(incomeTransactions);
+  };
+
+  useEffect(() => {
+    refresh();
   }, []);
 
   const handleAddIncome = (newIncome: Transaction) => {
     dataService.addTransaction(newIncome);
     setIncomes([newIncome, ...incomes]);
+  };
+
+  const handleDelete = (id: string) => {
+    dataService.deleteTransaction(id);
+    refresh();
+    toast.success('Income deleted');
+  };
+
+  const handleEdit = (tx: Transaction) => {
+    const desc = window.prompt('Edit description', tx.description) ?? tx.description;
+    const amountStr = window.prompt('Edit amount', String(tx.amount)) ?? String(tx.amount);
+    const amount = parseFloat(amountStr);
+    if (!isNaN(amount)) {
+      dataService.updateTransaction({ ...tx, description: desc, amount });
+      refresh();
+      toast.success('Income updated');
+    } else {
+      toast.error('Invalid amount');
+    }
   };
 
   return (
@@ -34,6 +57,8 @@ const Income = () => {
       <IncomeTable 
         incomes={incomes} 
         getCategoryById={dataService.getCategoryById.bind(dataService)} 
+        onDelete={handleDelete}
+        onEdit={handleEdit}
       />
     </div>
   );

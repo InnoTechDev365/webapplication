@@ -2,19 +2,19 @@
 import React, { useState } from 'react';
 import { useAppContext } from '@/lib/AppContext';
 import { Button } from '@/components/ui/button';
-import { Database, LogIn, Cloud, CloudOff, Wifi, WifiOff } from 'lucide-react';
+import { Cloud, CloudOff, Wifi, WifiOff } from 'lucide-react';
 import { SupabaseConnectionDialog } from './SupabaseConnectionDialog';
 
 export const SupabaseConnector = () => {
   const { isSupabaseConnected, connectToSupabase, disconnectFromSupabase } = useAppContext();
   const [showConnectionDialog, setShowConnectionDialog] = useState(false);
 
-  const handleConnect = () => {
-    connectToSupabase();
+  const handleConnect = async (url: string, anonKey: string) => {
+    await connectToSupabase(url, anonKey);
   };
 
-  const handleDisconnect = () => {
-    disconnectFromSupabase();
+  const handleDisconnect = async () => {
+    await disconnectFromSupabase();
   };
 
   return (

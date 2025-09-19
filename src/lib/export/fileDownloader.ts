@@ -9,6 +9,8 @@
  * @param filename The name to save the file as
  */
 export function downloadFile(blob: Blob, filename: string) {
+  // Guard for non-browser environments
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;

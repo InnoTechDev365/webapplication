@@ -79,8 +79,8 @@ export const ExportDialog = ({ trendData, savingsData, pieChartData }: ExportDia
 
   return (
     <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
-      <AlertDialogTrigger asChild>
-        <Button variant="outline" className="flex gap-2 items-center">
+<AlertDialogTrigger asChild>
+        <Button variant="outline" className="flex gap-2 items-center" aria-label="Export Report">
           <Download className="h-4 w-4" />
           Export Report
         </Button>
