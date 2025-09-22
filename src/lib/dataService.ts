@@ -12,6 +12,23 @@ export class DataService {
     storageManager.addTransaction(transaction);
   }
 
+  updateTransaction(updated: Transaction): void {
+    const transactions = storageManager.getTransactions();
+    const index = transactions.findIndex(t => t.id === updated.id);
+    if (index !== -1) {
+      transactions[index] = { ...transactions[index], ...updated };
+      storageManager.saveTransactions(transactions);
+    }
+  }
+
+  deleteTransaction(id: string): void {
+    const transactions = storageManager.getTransactions();
+    const next = transactions.filter(t => t.id !== id);
+    if (next.length !== transactions.length) {
+      storageManager.saveTransactions(next);
+    }
+  }
+
   // Category methods
   getCategories(): Category[] {
     return storageManager.getCategories();

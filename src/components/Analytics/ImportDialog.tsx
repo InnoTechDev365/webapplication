@@ -17,6 +17,8 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useAppContext } from "@/lib/AppContext";
+import { storageManager } from "@/lib/storage";
+import type { Transaction, Category } from "@/lib/types";
 
 export const ImportDialog = () => {
   const [showDialog, setShowDialog] = useState(false);
@@ -153,11 +155,74 @@ const handleFile = async (file: File) => {
     if (!importData) return;
     
     try {
-      // Here you would integrate with your data storage system
-      // For now, we'll just show success
-      console.log("Importing comprehensive financial data:", importData);
-      
-      toast.success(`Successfully imported ${importData.metadata.recordCount} records from ${importData.metadata.fileName}`);
+      // Build transactions from imported trends and merge categories
+      const existingTx = storageManager.getTransactions();
+      const existingCats = storageManager.getCategories();
+      const incomeCat = existingCats.find(c => c.type === 'income')?.id || 'income-salary';
+      const expenseCat = existingCats.find(c => c.type === 'expense')?.id || 'expense-food';
+
+      const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      const parseDate = (label: string) => {
+        const now = new Date();
+        const idx = monthNames.findIndex(m => label?.toLowerCase().startsWith(m.toLowerCase()));
+        if (idx >= 0) return new Date(now.getFullYear(), idx, 1).toISOString();
+        const d = new Date(label);
+        return isNaN(d.getTime()) ? now.toISOString() : d.toISOString();
+      };
+
+      const newTx: Transaction[] = [];
+      (importData.trends || []).forEach((t: any) => {
+        const period = String(t.name ?? 'Imported');
+        const dateIso = parseDate(period);
+        const rnd = () => Math.random().toString(36).slice(2, 8);
+        const baseId = `imp-${Date.now()}-${rnd()}`;
+
+        const inc = Number(t.income) || 0;
+        const exp = Number(t.expenses) || 0;
+        if (inc > 0) {
+          newTx.push({
+            id: `${baseId}-inc`,
+            amount: inc,
+            description: `Imported Income - ${period}`,
+            date: dateIso,
+            category: incomeCat,
+            type: 'income'
+          } as Transaction);
+        }
+        if (exp > 0) {
+          newTx.push({
+            id: `${baseId}-exp`,
+            amount: exp,
+            description: `Imported Expense - ${period}`,
+            date: dateIso,
+            category: expenseCat,
+            type: 'expense'
+          } as Transaction);
+        }
+      });
+
+      // Merge categories from import
+      const existingNames = new Set(existingCats.map(c => c.name.toLowerCase()));
+      const newCats: Category[] = [];
+      (importData.categories || []).forEach((c: any) => {
+        const name = String(c.name ?? '').trim();
+        if (name && !existingNames.has(name.toLowerCase())) {
+          newCats.push({
+            id: `import-${Math.random().toString(36).slice(2, 9)}`,
+            name,
+            color: '#ef4444',
+            type: 'expense'
+          } as Category);
+        }
+      });
+      if (newCats.length) {
+        storageManager.saveCategories([...existingCats, ...newCats]);
+      }
+
+      // Save transactions (prepend so they appear at top)
+      storageManager.saveTransactions([...newTx, ...existingTx]);
+
+      toast.success(`Imported ${newTx.length} transactions from ${importData.metadata.fileName}`);
       setShowDialog(false);
       setPreviewMode(false);
       setImportData(null);
