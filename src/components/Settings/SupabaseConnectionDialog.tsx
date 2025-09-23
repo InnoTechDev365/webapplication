@@ -10,8 +10,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Database, Loader2, CheckCircle } from 'lucide-react';
+import { Database, Loader2, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { reloadPage } from '@/lib/browserUtils';
 
 interface SupabaseConnectionDialogProps {
   open: boolean;
@@ -24,26 +25,47 @@ export const SupabaseConnectionDialog = ({ open, onOpenChange, onConnect }: Supa
   const [anonKey, setAnonKey] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+
+  const validateInputs = () => {
+    if (!url.trim()) {
+      setConnectionError('Supabase URL is required');
+      return false;
+    }
+    if (!anonKey.trim()) {
+      setConnectionError('Anon key is required');
+      return false;
+    }
+    if (!url.includes('supabase.co') && !url.includes('localhost')) {
+      setConnectionError('Please enter a valid Supabase URL (e.g., https://your-project.supabase.co)');
+      return false;
+    }
+    if (anonKey.length < 50) {
+      setConnectionError('Anon key appears to be invalid (too short)');
+      return false;
+    }
+    setConnectionError(null);
+    return true;
+  };
 
   const handleConnect = async () => {
-    if (!url || !anonKey) {
-      toast.error('Please enter your Supabase URL and anon key');
-      return;
-    }
+    if (!validateInputs()) return;
 
     setIsConnecting(true);
+    setConnectionError(null);
     
     try {
-      await onConnect(url, anonKey);
+      await onConnect(url.trim(), anonKey.trim());
       setIsConnected(true);
-      toast.success('Successfully connected to Supabase!');
 
       setTimeout(() => {
         onOpenChange(false);
         resetDialog();
-      }, 800);
-    } catch (error) {
-      toast.error('Failed to connect to Supabase');
+        // Optional: refresh page to ensure clean state
+        setTimeout(() => reloadPage(), 100);
+      }, 1500);
+    } catch (error: any) {
+      setConnectionError(error.message || 'Connection failed');
       setIsConnecting(false);
     }
   };
@@ -53,6 +75,7 @@ export const SupabaseConnectionDialog = ({ open, onOpenChange, onConnect }: Supa
     setAnonKey('');
     setIsConnecting(false);
     setIsConnected(false);
+    setConnectionError(null);
   };
 
   const handleClose = () => {
@@ -108,8 +131,41 @@ export const SupabaseConnectionDialog = ({ open, onOpenChange, onConnect }: Supa
               />
             </div>
             
+            {connectionError && (
+              <div className="rounded-md bg-red-50 border border-red-200 p-3">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-red-600" />
+                  <span className="text-sm text-red-800 font-medium">
+                    {connectionError}
+                  </span>
+                </div>
+              </div>
+            )}
+
             <div className="rounded-md bg-blue-50 border border-blue-200 p-3">
               <div className="text-sm text-blue-800 space-y-1">
+                <div className="font-medium flex items-center gap-1">
+                  <Database className="h-3 w-3" />
+                  How to find your Supabase credentials:
+                </div>
+                <div>• Go to your Supabase project dashboard</div>
+                <div>• Navigate to Settings → API</div>
+                <div>• Copy the Project URL and anon/public key</div>
+                <div className="pt-1">
+                  <a 
+                    href="https://supabase.com/dashboard" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 underline text-xs"
+                  >
+                    Open Supabase Dashboard <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-md bg-green-50 border border-green-200 p-3">
+              <div className="text-sm text-green-800 space-y-1">
                 <div className="font-medium">What happens when you connect:</div>
                 <div>• Your existing local data will be uploaded to your Supabase</div>
                 <div>• Future data saves locally and syncs to your Supabase</div>

@@ -4,10 +4,14 @@ import { Transaction } from "@/lib/types";
 import { dataService } from "@/lib/dataService";
 import { IncomeForm } from "@/components/Income/IncomeForm";
 import { IncomeTable } from "@/components/Income/IncomeTable";
+import { EditIncomeDialog } from "@/components/Income/EditIncomeDialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
 const Income = () => {
   const [incomes, setIncomes] = useState<Transaction[]>([]);
+  const [editingIncome, setEditingIncome] = useState<Transaction | null>(null);
+  const [deletingIncomeId, setDeletingIncomeId] = useState<string | null>(null);
 
   const refresh = () => {
     const allTransactions = dataService.getTransactions();
@@ -24,22 +28,36 @@ const Income = () => {
     setIncomes([newIncome, ...incomes]);
   };
 
-  const handleDelete = (id: string) => {
-    dataService.deleteTransaction(id);
-    refresh();
-    toast.success('Income deleted');
-  };
 
   const handleEdit = (tx: Transaction) => {
-    const desc = window.prompt('Edit description', tx.description) ?? tx.description;
-    const amountStr = window.prompt('Edit amount', String(tx.amount)) ?? String(tx.amount);
-    const amount = parseFloat(amountStr);
-    if (!isNaN(amount)) {
-      dataService.updateTransaction({ ...tx, description: desc, amount });
+    setEditingIncome(tx);
+  };
+
+  const handleSaveEdit = (updated: Transaction) => {
+    try {
+      dataService.updateTransaction(updated);
       refresh();
       toast.success('Income updated');
-    } else {
-      toast.error('Invalid amount');
+      setEditingIncome(null);
+    } catch (error) {
+      toast.error('Failed to update income');
+    }
+  };
+
+  const handleDeleteClick = (id: string) => {
+    setDeletingIncomeId(id);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deletingIncomeId) {
+      try {
+        dataService.deleteTransaction(deletingIncomeId);
+        refresh();
+        toast.success('Income deleted');
+      } catch (error) {
+        toast.error('Failed to delete income');
+      }
+      setDeletingIncomeId(null);
     }
   };
 
@@ -57,8 +75,28 @@ const Income = () => {
       <IncomeTable 
         incomes={incomes} 
         getCategoryById={dataService.getCategoryById.bind(dataService)} 
-        onDelete={handleDelete}
+        onDelete={handleDeleteClick}
         onEdit={handleEdit}
+      />
+
+      {editingIncome && (
+        <EditIncomeDialog
+          income={editingIncome}
+          open={!!editingIncome}
+          onOpenChange={(open) => !open && setEditingIncome(null)}
+          onSave={handleSaveEdit}
+        />
+      )}
+
+      <ConfirmDialog
+        open={!!deletingIncomeId}
+        onOpenChange={(open) => !open && setDeletingIncomeId(null)}
+        title="Delete Income"
+        description="Are you sure you want to delete this income entry? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+        onConfirm={handleConfirmDelete}
       />
     </div>
   );

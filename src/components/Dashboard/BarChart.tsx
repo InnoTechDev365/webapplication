@@ -3,6 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppContext } from '@/lib/AppContext';
 import { useState, useEffect } from 'react';
+import { getWindowWidth, addWindowEventListener } from "@/lib/browserUtils";
 
 interface IncomeExpenseData {
   name: string;
@@ -21,15 +22,12 @@ export function ChartBar({ data, title }: IncomeExpenseChartProps) {
 
   // Update window width when resized
   useEffect(() => {
-    // Only run in browser environment
-    if (typeof window === 'undefined') return;
-
-    // Set initial window width
-    setWindowWidth(window.innerWidth);
+    // Set initial window width safely
+    setWindowWidth(getWindowWidth());
     
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    // Add resize listener with cleanup
+    const cleanup = addWindowEventListener('resize', () => setWindowWidth(getWindowWidth()));
+    return cleanup;
   }, []);
   
   return (

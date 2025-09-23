@@ -4,10 +4,14 @@ import { Transaction } from "@/lib/types";
 import { dataService } from "@/lib/dataService";
 import { ExpenseForm } from "@/components/Expenses/ExpenseForm";
 import { ExpensesTable } from "@/components/Expenses/ExpensesTable";
+import { EditExpenseDialog } from "@/components/Expenses/EditExpenseDialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
 const Expenses = () => {
   const [expenses, setExpenses] = useState<Transaction[]>([]);
+  const [editingExpense, setEditingExpense] = useState<Transaction | null>(null);
+  const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null);
 
   const refresh = () => {
     const allTransactions = dataService.getTransactions();
@@ -24,22 +28,36 @@ const Expenses = () => {
     setExpenses([newExpense, ...expenses]);
   };
 
-  const handleDelete = (id: string) => {
-    dataService.deleteTransaction(id);
-    refresh();
-    toast.success('Expense deleted');
-  };
 
   const handleEdit = (tx: Transaction) => {
-    const desc = window.prompt('Edit description', tx.description) ?? tx.description;
-    const amountStr = window.prompt('Edit amount', String(tx.amount)) ?? String(tx.amount);
-    const amount = parseFloat(amountStr);
-    if (!isNaN(amount)) {
-      dataService.updateTransaction({ ...tx, description: desc, amount });
+    setEditingExpense(tx);
+  };
+
+  const handleSaveEdit = (updated: Transaction) => {
+    try {
+      dataService.updateTransaction(updated);
       refresh();
       toast.success('Expense updated');
-    } else {
-      toast.error('Invalid amount');
+      setEditingExpense(null);
+    } catch (error) {
+      toast.error('Failed to update expense');
+    }
+  };
+
+  const handleDeleteClick = (id: string) => {
+    setDeletingExpenseId(id);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deletingExpenseId) {
+      try {
+        dataService.deleteTransaction(deletingExpenseId);
+        refresh();
+        toast.success('Expense deleted');
+      } catch (error) {
+        toast.error('Failed to delete expense');
+      }
+      setDeletingExpenseId(null);
     }
   };
 
@@ -57,8 +75,28 @@ const Expenses = () => {
       <ExpensesTable 
         expenses={expenses} 
         getCategoryById={dataService.getCategoryById.bind(dataService)} 
-        onDelete={handleDelete}
+        onDelete={handleDeleteClick}
         onEdit={handleEdit}
+      />
+
+      {editingExpense && (
+        <EditExpenseDialog
+          expense={editingExpense}
+          open={!!editingExpense}
+          onOpenChange={(open) => !open && setEditingExpense(null)}
+          onSave={handleSaveEdit}
+        />
+      )}
+
+      <ConfirmDialog
+        open={!!deletingExpenseId}
+        onOpenChange={(open) => !open && setDeletingExpenseId(null)}
+        title="Delete Expense"
+        description="Are you sure you want to delete this expense entry? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+        onConfirm={handleConfirmDelete}
       />
     </div>
   );

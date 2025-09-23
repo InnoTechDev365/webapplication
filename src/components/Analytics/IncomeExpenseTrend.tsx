@@ -13,6 +13,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppContext } from "@/lib/AppContext";
 import { useState, useEffect } from 'react';
+import { getWindowWidth, addWindowEventListener } from "@/lib/browserUtils";
 
 interface IncomeExpenseTrendProps {
   data: Array<{
@@ -29,15 +30,12 @@ export const IncomeExpenseTrend = ({ data }: IncomeExpenseTrendProps) => {
 
   // Update window width when resized
   useEffect(() => {
-    // Only run in browser environment
-    if (typeof window === 'undefined') return;
+    // Set initial window width safely
+    setWindowWidth(getWindowWidth());
     
-    // Set initial window width
-    setWindowWidth(window.innerWidth);
-    
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    // Add resize listener with cleanup
+    const cleanup = addWindowEventListener('resize', () => setWindowWidth(getWindowWidth()));
+    return cleanup;
   }, []);
 
   const currencyFormatter = (value: any): string => {
