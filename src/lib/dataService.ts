@@ -109,6 +109,15 @@ export class DataService {
     return recent;
   }
 
+  // Get transactions within a date range
+  getTransactionsByDateRange(startDate: Date, endDate: Date): Transaction[] {
+    const transactions = this.getTransactions();
+    return transactions.filter(transaction => {
+      const transactionDate = new Date(transaction.date);
+      return transactionDate >= startDate && transactionDate <= endDate;
+    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }
+
   // Generate trend data from transactions with period filtering
   getTrendData(periodDays?: number): Array<{ name: string; income: number; expenses: number }> {
     const transactions = this.getTransactions();
