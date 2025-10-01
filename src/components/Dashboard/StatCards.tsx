@@ -8,22 +8,30 @@ export function StatCards() {
   const { formatCurrency } = useAppContext();
   const totalIncome = dataService.getTotalIncome();
   const totalExpenses = dataService.getTotalExpenses();
+  const balance = dataService.getBalance();
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-4 md:grid-cols-3">
       <StatCard
         title="Total Income"
         value={formatCurrency(totalIncome)}
         icon={<PiggyBank className="h-4 w-4 text-primary" />}
-        change={totalIncome > 0 ? "+12% from last month" : "No income yet"}
+        change={totalIncome > 0 ? "All time total" : "No income yet"}
         changeType={totalIncome > 0 ? "positive" : "neutral"}
       />
       <StatCard
         title="Total Expenses"
         value={formatCurrency(totalExpenses)}
         icon={<Wallet className="h-4 w-4 text-primary" />}
-        change={totalExpenses > 0 ? "+5% from last month" : "No expenses yet"}
+        change={totalExpenses > 0 ? "All time total" : "No expenses yet"}
         changeType={totalExpenses > 0 ? "negative" : "neutral"}
+      />
+      <StatCard
+        title="Balance"
+        value={formatCurrency(balance)}
+        icon={<PiggyBank className="h-4 w-4 text-primary" />}
+        change={balance >= 0 ? "Positive balance" : "Negative balance"}
+        changeType={balance >= 0 ? "positive" : "negative"}
       />
     </div>
   );

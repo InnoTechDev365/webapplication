@@ -9,7 +9,7 @@ export function DashboardCharts() {
   const totalExpenses = dataService.getTotalExpenses();
   
   // Prepare data for pie chart
-  const spendingByCategory = dataService.getSpendingByCategory();
+  const spendingByCategory = dataService.getSpendingByCategory(30);
   const pieChartData = Object.entries(spendingByCategory).map(([name, value]) => {
     return {
       name,
@@ -18,8 +18,9 @@ export function DashboardCharts() {
     };
   });
 
-  // Prepare data for bar chart - show real data or placeholder
-  const barChartData = [
+  // Get real trend data for the last 30 days
+  const trendData = dataService.getTrendData(30);
+  const barChartData = trendData.length > 0 ? trendData : [
     { name: 'Week 1', income: 0, expenses: 0 },
     { name: 'Week 2', income: 0, expenses: 0 },
     { name: 'Week 3', income: 0, expenses: 0 },
@@ -29,13 +30,13 @@ export function DashboardCharts() {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <ChartPie 
-        data={pieChartData.length > 0 ? pieChartData : [{ name: 'No data', value: 1, color: '#e5e7eb' }]} 
-        title="Expense Breakdown" 
+        data={pieChartData.length > 0 ? pieChartData : [{ name: 'No data', value: 1, color: 'hsl(var(--muted))' }]} 
+        title="Expense Breakdown (Last 30 Days)" 
         total={totalExpenses > 0 ? formatCurrency(totalExpenses) : formatCurrency(0)}
       />
       <ChartBar 
         data={barChartData} 
-        title="Monthly Overview" 
+        title="Income vs Expenses (Last 30 Days)" 
       />
     </div>
   );

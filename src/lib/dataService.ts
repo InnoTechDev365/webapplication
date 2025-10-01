@@ -59,28 +59,20 @@ export class DataService {
   // Analytics methods - these will return 0 for new users with no transactions
   getTotalIncome(): number {
     const transactions = this.getTransactions();
-    const total = transactions
+    return transactions
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
-    
-    console.log('Total income calculated:', total);
-    return total;
   }
 
   getTotalExpenses(): number {
     const transactions = this.getTransactions();
-    const total = transactions
+    return transactions
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
-    
-    console.log('Total expenses calculated:', total);
-    return total;
   }
 
   getBalance(): number {
-    const balance = this.getTotalIncome() - this.getTotalExpenses();
-    console.log('Balance calculated:', balance);
-    return balance;
+    return this.getTotalIncome() - this.getTotalExpenses();
   }
 
   getIncomeByCategory(): Record<string, number> {
@@ -94,19 +86,15 @@ export class DataService {
       income[categoryName] = (income[categoryName] || 0) + inc.amount;
     });
 
-    console.log('Income by category calculated:', income);
     return income;
   }
 
   // Get recent transactions (last 5)
   getRecentTransactions(): Transaction[] {
     const transactions = this.getTransactions();
-    const recent = [...transactions]
+    return [...transactions]
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 5);
-    
-    console.log('Recent transactions fetched:', recent.length);
-    return recent;
   }
 
   // Get transactions within a date range
@@ -229,14 +217,12 @@ export class DataService {
       spending[categoryName] = (spending[categoryName] || 0) + expense.amount;
     });
 
-    console.log('Spending by category calculated:', spending);
     return spending;
   }
 
   // Clear all user data
   clearAllData(): void {
     storageManager.clearAllData();
-    console.log('All user data cleared and reset to initial state');
   }
 }
 
