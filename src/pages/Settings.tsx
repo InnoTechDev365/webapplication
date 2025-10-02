@@ -1,6 +1,5 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ProfileSection } from "@/components/Settings/ProfileSection";
 import { NotificationsSection } from "@/components/Settings/NotificationsSection";
 import { PreferencesSection } from "@/components/Settings/PreferencesSection";
 import { PreferencesSectionAlt } from "@/components/Settings/PreferencesSectionAlt";
@@ -14,22 +13,13 @@ const Settings = () => {
         <p className="text-muted-foreground">Manage your account settings and preferences</p>
       </div>
 
-      <Tabs defaultValue="profile" className="space-y-4">
+      <Tabs defaultValue="preferences" className="space-y-4">
         <TabsList className="w-full sm:w-auto flex flex-wrap">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="preferences">Preferences</TabsTrigger>
           <TabsTrigger value="preferences-alt">Preferences Alt</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="profile">
-          <ProfileSection />
-        </TabsContent>
-        
-        <TabsContent value="notifications">
-          <NotificationsSection />
-        </TabsContent>
         
         <TabsContent value="preferences">
           <PreferencesSection />
@@ -37,6 +27,10 @@ const Settings = () => {
         
         <TabsContent value="preferences-alt">
           <PreferencesSectionAlt />
+        </TabsContent>
+        
+        <TabsContent value="notifications">
+          <NotificationsSection />
         </TabsContent>
         
         <TabsContent value="appearance">
