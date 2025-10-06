@@ -63,6 +63,28 @@ export async function testConnection() {
   return { ok: !error, error };
 }
 
+export async function verifyTablesExist(): Promise<{ ok: boolean; missingTables: string[] }> {
+  const supabase = ensureClient();
+  const requiredTables = ['app_settings', 'categories', 'transactions', 'budgets'];
+  const missingTables: string[] = [];
+
+  for (const table of requiredTables) {
+    try {
+      const { error } = await supabase.from(table).select('*').limit(1);
+      if (error) {
+        missingTables.push(table);
+      }
+    } catch (e) {
+      missingTables.push(table);
+    }
+  }
+
+  return {
+    ok: missingTables.length === 0,
+    missingTables
+  };
+}
+
 export async function syncSettings(appUserId: string, settings: UserSettings) {
   const supabase = ensureClient();
   const payload = { app_user_id: appUserId, currency: settings.currency, language: settings.language };

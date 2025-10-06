@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { storageManager } from '../storage';
 import { toast } from 'sonner';
 import { setSupabaseCredentials, clearSupabaseCredentials, getSupabaseClient } from '../supabaseClient';
-import { testConnection, SETUP_SQL } from '../remoteSync';
+import { SETUP_SQL } from '../remoteSync';
 import { writeToClipboard } from '../browserUtils';
 
 export const useSupabase = () => {
@@ -35,51 +35,56 @@ export const useSupabase = () => {
         throw new Error('Failed to create Supabase client');
       }
 
-      // Try a simple query to test connection
-      try {
-        const { error } = await client.from('transactions').select('count').limit(1);
-        if (error && !error.message.includes('relation "transactions" does not exist')) {
-          throw error;
+      // Verify all required tables exist
+      const { verifyTablesExist } = await import('../remoteSync');
+      const verification = await verifyTablesExist();
+      
+      if (!verification.ok) {
+        const success = await writeToClipboard(SETUP_SQL);
+        const missingTablesMsg = verification.missingTables.join(', ');
+        
+        clearSupabaseCredentials();
+        
+        if (success) {
+          toast.error(`Cannot connect: Missing database tables (${missingTablesMsg}). Setup SQL copied to clipboard - run it in your Supabase SQL editor first.`, {
+            duration: 10000
+          });
+        } else {
+          toast.error(`Cannot connect: Missing database tables (${missingTablesMsg}). Check console for setup SQL.`, {
+            duration: 10000
+          });
+          console.info('[Supabase Setup SQL - Copy and run this in your SQL Editor first]\n', SETUP_SQL);
         }
-      } catch (connectionError: any) {
-        // If it's a table missing error, that's fine - we'll handle setup
-        if (!connectionError.message?.includes('relation "transactions" does not exist')) {
-          throw connectionError;
-        }
+        throw new Error(`Missing required tables: ${missingTablesMsg}`);
       }
 
-      // Connect and sync existing local data
+      // Tables exist - proceed with connection
+      const userId = storageManager.getUserId();
+      
+      // Pull existing data from Supabase
+      const { pullAll } = await import('../remoteSync');
+      const remoteData = await pullAll(userId);
+      
+      // Get local data
+      const localTransactions = storageManager.getTransactions();
+      const localBudgets = storageManager.getBudgets();
+      const localCategories = storageManager.getCategories();
+      
+      // Merge data (prefer remote data if both exist, keep local if remote is empty)
+      const mergedTransactions = remoteData.transactions.length > 0 ? remoteData.transactions : localTransactions;
+      const mergedBudgets = remoteData.budgets.length > 0 ? remoteData.budgets : localBudgets;
+      const mergedCategories = remoteData.categories.length > 0 ? remoteData.categories : localCategories;
+      
+      // Connect storage manager
       storageManager.connectToSupabase(true);
       setIsSupabaseConnected(true);
       
-      // Upload existing data
-      const transactions = storageManager.getTransactions();
-      const budgets = storageManager.getBudgets();
-      const categories = storageManager.getCategories();
+      // Save merged data to both local and Supabase
+      storageManager.saveTransactions(mergedTransactions);
+      storageManager.saveBudgets(mergedBudgets);
+      storageManager.saveCategories(mergedCategories);
       
-      if (transactions.length > 0) storageManager.saveTransactions(transactions);
-      if (budgets.length > 0) storageManager.saveBudgets(budgets);
-      if (categories.length > 0) storageManager.saveCategories(categories);
-
-      // Test table existence again after sync
-      const tableTestResult = await testConnection().catch(() => ({ ok: false }));
-
-      if (tableTestResult.ok) {
-        toast.success('Connected to Supabase successfully! All tables are ready.');
-      } else {
-        // Tables are missing, provide setup SQL
-        const success = await writeToClipboard(SETUP_SQL);
-        if (success) {
-          toast.warning('Connected, but database tables are missing. Setup SQL copied to clipboard - paste it in your Supabase SQL editor.', {
-            duration: 8000
-          });
-        } else {
-          toast.warning('Connected, but database tables are missing. Check console for setup SQL.', {
-            duration: 8000
-          });
-          console.info('[Supabase Setup SQL - Copy this to your SQL Editor]\n', SETUP_SQL);
-        }
-      }
+      toast.success('Connected to Supabase! Data synced successfully.');
     } catch (e: any) {
       clearSupabaseCredentials();
       storageManager.connectToSupabase(false);
@@ -88,10 +93,12 @@ export const useSupabase = () => {
       const errorMessage = e.message || 'Unknown error';
       if (errorMessage.includes('Invalid')) {
         toast.error(`Connection failed: ${errorMessage}`);
+      } else if (errorMessage.includes('Missing required tables')) {
+        // Already showed detailed error above
       } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
         toast.error('Network error: Check your internet connection and Supabase URL.');
       } else {
-        toast.error('Failed to connect to Supabase. Verify your credentials and try again.');
+        toast.error('Failed to connect to Supabase. Verify your credentials and database setup.');
       }
       
       console.error('Supabase connection error:', e);
