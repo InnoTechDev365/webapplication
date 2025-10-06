@@ -38,15 +38,15 @@ export function AnalyticsSummaryTable({
         <CardTitle>Income & Expenses Summary</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="rounded-md border">
+        <div className="rounded-md border overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead className="text-right">Income</TableHead>
-                <TableHead className="text-right">Expense</TableHead>
+                <TableHead className="min-w-[100px]">Date</TableHead>
+                <TableHead className="min-w-[150px]">Description</TableHead>
+                <TableHead className="min-w-[120px]">Category</TableHead>
+                <TableHead className="text-right min-w-[100px]">Income</TableHead>
+                <TableHead className="text-right min-w-[100px]">Expense</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

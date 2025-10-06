@@ -9,6 +9,12 @@ interface AnalyticsActionsProps {
 }
 
 export function AnalyticsActions({ trendData, savingsData, pieChartData }: AnalyticsActionsProps) {
+  const handleImport = (data: any[]) => {
+    console.log("Imported data:", data);
+    // This component is not currently used in the app
+    // Import functionality is handled in the main Analytics page
+  };
+
   return (
     <div className="flex flex-wrap gap-2">
       <ExportDialog
@@ -16,7 +22,7 @@ export function AnalyticsActions({ trendData, savingsData, pieChartData }: Analy
         savingsData={savingsData}
         pieChartData={pieChartData}
       />
-      <ImportDialog />
+      <ImportDialog onImport={handleImport} />
     </div>
   );
 }

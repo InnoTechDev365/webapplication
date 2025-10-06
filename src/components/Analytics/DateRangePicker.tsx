@@ -52,9 +52,12 @@ export function DateRangePicker({ dateRange, onDateRangeChange }: DateRangePicke
           onSelect={onDateRangeChange}
           numberOfMonths={2}
           className="pointer-events-auto"
-          disabled={(date) =>
-            date > new Date() || date < new Date(new Date().getFullYear(), 0, 1)
-          }
+          disabled={(date) => {
+            const today = new Date();
+            const fiveYearsAgo = new Date();
+            fiveYearsAgo.setFullYear(today.getFullYear() - 5);
+            return date > today || date < fiveYearsAgo;
+          }}
         />
       </PopoverContent>
     </Popover>
