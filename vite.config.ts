@@ -9,8 +9,8 @@ export default defineConfig(({ command, mode }) => {
   const isDev = command === 'serve'
   const isProd = mode === 'production'
   
-  // Get repository name from package.json or environment
-  const repoName = process.env.GITHUB_REPOSITORY?.split('/')[1] || 'ExpenseCoin'
+  // Get repository name from environment variable set by GitHub Actions
+  const repoName = process.env.GITHUB_REPOSITORY?.split('/')[1] || 'expense-tracker'
   
   return {
     plugins: [
