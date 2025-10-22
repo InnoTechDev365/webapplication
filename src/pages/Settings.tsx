@@ -1,6 +1,5 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { NotificationsSection } from "@/components/Settings/NotificationsSection";
 import { PreferencesSection } from "@/components/Settings/PreferencesSection";
 import { PreferencesSectionAlt } from "@/components/Settings/PreferencesSectionAlt";
 import { AppearanceSection } from "@/components/Settings/AppearanceSection";
@@ -17,7 +16,6 @@ const Settings = () => {
         <TabsList className="w-full sm:w-auto flex flex-wrap">
           <TabsTrigger value="preferences">Preferences</TabsTrigger>
           <TabsTrigger value="preferences-alt">Preferences Alt</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
         </TabsList>
         
@@ -27,10 +25,6 @@ const Settings = () => {
         
         <TabsContent value="preferences-alt">
           <PreferencesSectionAlt />
-        </TabsContent>
-        
-        <TabsContent value="notifications">
-          <NotificationsSection />
         </TabsContent>
         
         <TabsContent value="appearance">
