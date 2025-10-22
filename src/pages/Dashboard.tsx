@@ -4,10 +4,10 @@ import { DashboardTabs } from "@/components/Dashboard/DashboardTabs";
 
 const Dashboard = () => {
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">Track your personal finances at a glance</p>
+    <div className="space-y-4 sm:space-y-6 animate-fade-in">
+      <div className="space-y-1">
+        <h1 className="heading-1">Dashboard</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">Track your personal finances at a glance</p>
       </div>
 
       <StatCards />

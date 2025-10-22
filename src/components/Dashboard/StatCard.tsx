@@ -21,11 +21,11 @@ export function StatCard({
 }: StatCardProps) {
   return (
     <Card className={cn("overflow-hidden", className)}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">{title}</p>
-            <h3 className="text-2xl font-bold mt-1">{value}</h3>
+      <CardContent className="card-content-responsive">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">{title}</p>
+            <h3 className="stat-value mt-1 truncate">{value}</h3>
             {change && (
               <p 
                 className={cn(
@@ -38,7 +38,7 @@ export function StatCard({
               </p>
             )}
           </div>
-          <div className="p-2 rounded-full bg-primary/10">
+          <div className="p-2 sm:p-3 rounded-full bg-primary/10 shrink-0">
             {icon}
           </div>
         </div>

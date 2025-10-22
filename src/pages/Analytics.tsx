@@ -106,11 +106,11 @@ const Analytics = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
-          <p className="text-muted-foreground">
+    <div className="space-y-4 sm:space-y-6 animate-fade-in">
+      <div className="flex flex-col gap-3 sm:gap-4">
+        <div className="space-y-1">
+          <h1 className="heading-1">Analytics</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Select a period to view income and expenses summary
           </p>
         </div>
