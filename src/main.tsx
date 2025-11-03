@@ -5,21 +5,33 @@ import App from './App.tsx'
 import './index.css'
 
 // PWA Registration
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js')
-      .then(registration => {
-        console.log('SW registered:', registration);
-        
-        // Check for updates every hour
-        setInterval(() => {
-          registration.update();
-        }, 60 * 60 * 1000);
-      })
-      .catch(error => {
-        console.log('SW registration failed:', error);
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    const swUrl = `${import.meta.env.BASE_URL}sw.js`;
+
+    try {
+      // Unregister any SWs outside our app's base scope (fixes stale GH Pages SWs)
+      const regs = await navigator.serviceWorker.getRegistrations();
+      const expectedScope = window.location.origin + import.meta.env.BASE_URL;
+      regs.forEach((reg) => {
+        if (reg.scope && !reg.scope.startsWith(expectedScope)) {
+          reg.unregister();
+        }
       });
+
+      const registration = await navigator.serviceWorker.register(swUrl);
+      console.log('SW registered:', registration);
+
+      // Check for updates every hour
+      setInterval(() => registration.update(), 60 * 60 * 1000);
+
+      // Reload when a new SW takes control
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload();
+      });
+    } catch (error) {
+      console.log('SW registration failed:', error);
+    }
   });
 }
 

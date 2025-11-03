@@ -28,17 +28,17 @@ export default defineConfig(({ command, mode }) => {
           background_color: '#ffffff',
           display: 'standalone',
           orientation: 'portrait',
-          scope: '/',
-          start_url: '/',
+          scope: '.',
+          start_url: '.',
           icons: [
             {
-              src: '/pwa-192x192.png',
+              src: 'pwa-192x192.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any maskable'
             },
             {
-              src: '/pwa-512x512.png',
+              src: 'pwa-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any maskable'
@@ -47,6 +47,7 @@ export default defineConfig(({ command, mode }) => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+          cleanupOutdatedCaches: true,
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
