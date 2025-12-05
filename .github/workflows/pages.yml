@@ -11,10 +11,10 @@ permissions:
   pages: write
   id-token: write
 
-# Ensure only one active Pages deployment to avoid duplicate links
+# Allow only one concurrent deployment, but let running deployments complete
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
