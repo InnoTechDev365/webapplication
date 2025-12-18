@@ -1,4 +1,3 @@
-
 import { Transaction, Budget, Category, UserSettings } from './types';
 import { syncTransactions, syncBudgets, syncCategories, syncSettings } from './remoteSync';
 import { hasSupabaseCredentials } from './supabaseClient';
@@ -22,12 +21,58 @@ const defaultCategories: Category[] = [
   { id: 'expense-utilities', name: 'Utilities', color: '#06b6d4', type: 'expense' }
 ];
 
+// Safe localStorage access for SSR and privacy mode
+const safeLocalStorage = {
+  getItem: (key: string): string | null => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        return localStorage.getItem(key);
+      }
+    } catch (e) {
+      console.warn('localStorage not available:', e);
+    }
+    return null;
+  },
+  setItem: (key: string, value: string): boolean => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem(key, value);
+        return true;
+      }
+    } catch (e) {
+      console.warn('localStorage not available:', e);
+    }
+    return false;
+  },
+  removeItem: (key: string): boolean => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.removeItem(key);
+        return true;
+      }
+    } catch (e) {
+      console.warn('localStorage not available:', e);
+    }
+    return false;
+  }
+};
+
 class StorageManager {
   private settings: UserSettings;
   private isSupabaseConnected: boolean = false;
   private userId: string;
+  private memoryCache: {
+    transactions: Transaction[];
+    budgets: Budget[];
+    categories: Category[];
+  };
 
   constructor() {
+    this.memoryCache = {
+      transactions: [],
+      budgets: [],
+      categories: []
+    };
     this.userId = this.initializeUserId();
     this.settings = this.loadSettings();
     this.initializeDefaultData();
@@ -36,20 +81,28 @@ class StorageManager {
 
   // Private initialization methods
   private initializeUserId(): string {
-    let userId = localStorage.getItem('expense_coin_user_id');
+    let userId = safeLocalStorage.getItem('expense_coin_user_id');
     if (!userId) {
       userId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-      localStorage.setItem('expense_coin_user_id', userId);
+      safeLocalStorage.setItem('expense_coin_user_id', userId);
       console.log('New user initialized with ID:', userId);
     }
     return userId;
   }
 
   private loadSettings(): UserSettings {
-    const savedSettings = localStorage.getItem(`user_settings_${this.userId}`);
-    const settings = savedSettings ? JSON.parse(savedSettings) : { ...defaultSettings };
+    const savedSettings = safeLocalStorage.getItem(`user_settings_${this.userId}`);
+    let settings: UserSettings;
     
-    if (!savedSettings) {
+    if (savedSettings) {
+      try {
+        settings = JSON.parse(savedSettings);
+      } catch (e) {
+        console.warn('Failed to parse settings, using defaults:', e);
+        settings = { ...defaultSettings };
+      }
+    } else {
+      settings = { ...defaultSettings };
       this.saveSettings(settings);
       console.log('Default settings initialized for user:', this.userId);
     }
@@ -58,26 +111,59 @@ class StorageManager {
   }
 
   private initializeDefaultData(): void {
-    const existingCategories = this.getCategories();
-    const existingTransactions = this.getTransactions();
+    // Load existing data into memory cache
+    this.loadDataToCache();
     
     // Only initialize categories if none exist
-    if (existingCategories.length === 0) {
+    if (this.memoryCache.categories.length === 0) {
       this.saveCategories(defaultCategories);
       console.log('Default categories initialized for user:', this.userId);
     }
     
-    // Ensure no demo transactions exist for new users
-    if (existingTransactions.length === 0) {
+    // Ensure clean transaction and budget lists exist
+    if (this.memoryCache.transactions.length === 0) {
       this.saveTransactions([]);
       console.log('Clean transaction history initialized for user:', this.userId);
     }
     
-    // Ensure no demo budgets exist for new users
-    const existingBudgets = this.getBudgets();
-    if (existingBudgets.length === 0) {
+    if (this.memoryCache.budgets.length === 0) {
       this.saveBudgets([]);
       console.log('Clean budget list initialized for user:', this.userId);
+    }
+  }
+
+  private loadDataToCache(): void {
+    // Load transactions
+    const transactionsData = safeLocalStorage.getItem(`transactions_${this.userId}`);
+    if (transactionsData) {
+      try {
+        this.memoryCache.transactions = JSON.parse(transactionsData);
+      } catch (e) {
+        console.warn('Failed to parse transactions:', e);
+        this.memoryCache.transactions = [];
+      }
+    }
+    
+    // Load budgets
+    const budgetsData = safeLocalStorage.getItem(`budgets_${this.userId}`);
+    if (budgetsData) {
+      try {
+        this.memoryCache.budgets = JSON.parse(budgetsData);
+      } catch (e) {
+        console.warn('Failed to parse budgets:', e);
+        this.memoryCache.budgets = [];
+      }
+    }
+    
+    // Load categories
+    const categoriesData = safeLocalStorage.getItem(`categories_${this.userId}`);
+    if (categoriesData) {
+      try {
+        this.memoryCache.categories = JSON.parse(categoriesData);
+      } catch (e) {
+        console.warn('Failed to parse categories:', e);
+        this.memoryCache.categories = [];
+      }
     }
   }
 
@@ -92,7 +178,7 @@ class StorageManager {
 
   saveSettings(settings: UserSettings): void {
     this.settings = settings;
-    localStorage.setItem(`user_settings_${this.userId}`, JSON.stringify(settings));
+    safeLocalStorage.setItem(`user_settings_${this.userId}`, JSON.stringify(settings));
   }
 
   setCurrency(currency: string): void {
@@ -139,19 +225,39 @@ class StorageManager {
       console.log(`Fetching transactions from Supabase for user ${this.userId}`);
     }
     
-    const data = localStorage.getItem(`transactions_${this.userId}`);
-    return data ? JSON.parse(data) : [];
+    // Return from memory cache first, then try localStorage
+    if (this.memoryCache.transactions.length > 0) {
+      return [...this.memoryCache.transactions];
+    }
+    
+    const data = safeLocalStorage.getItem(`transactions_${this.userId}`);
+    if (data) {
+      try {
+        this.memoryCache.transactions = JSON.parse(data);
+        return [...this.memoryCache.transactions];
+      } catch (e) {
+        console.warn('Failed to parse transactions:', e);
+      }
+    }
+    return [];
   }
 
   saveTransactions(transactions: Transaction[]): void {
-    localStorage.setItem(`transactions_${this.userId}`, JSON.stringify(transactions));
+    this.memoryCache.transactions = [...transactions];
+    const saved = safeLocalStorage.setItem(`transactions_${this.userId}`, JSON.stringify(transactions));
+    
+    if (!saved) {
+      console.warn('Failed to save transactions to localStorage, keeping in memory');
+    }
     
     if (this.isSupabaseConnected && hasSupabaseCredentials()) {
       syncTransactions(this.userId, transactions)
         .then(() => {
-          localStorage.setItem('supabase_last_sync', new Date().toISOString());
+          safeLocalStorage.setItem('supabase_last_sync', new Date().toISOString());
         })
-        .catch(() => {});
+        .catch((err) => {
+          console.warn('Failed to sync transactions to Supabase:', err);
+        });
     }
   }
 
@@ -162,25 +268,61 @@ class StorageManager {
     console.log(`Transaction added for user ${this.userId}:`, transaction.description);
   }
 
+  updateTransaction(updatedTransaction: Transaction): void {
+    const transactions = this.getTransactions();
+    const index = transactions.findIndex(t => t.id === updatedTransaction.id);
+    if (index !== -1) {
+      transactions[index] = updatedTransaction;
+      this.saveTransactions(transactions);
+      console.log(`Transaction updated for user ${this.userId}:`, updatedTransaction.description);
+    }
+  }
+
+  deleteTransaction(transactionId: string): void {
+    const transactions = this.getTransactions();
+    const filtered = transactions.filter(t => t.id !== transactionId);
+    this.saveTransactions(filtered);
+    console.log(`Transaction deleted for user ${this.userId}:`, transactionId);
+  }
+
   // Budget management
   getBudgets(): Budget[] {
     if (this.isSupabaseConnected) {
       console.log(`Fetching budgets from Supabase for user ${this.userId}`);
     }
     
-    const data = localStorage.getItem(`budgets_${this.userId}`);
-    return data ? JSON.parse(data) : [];
+    if (this.memoryCache.budgets.length > 0) {
+      return [...this.memoryCache.budgets];
+    }
+    
+    const data = safeLocalStorage.getItem(`budgets_${this.userId}`);
+    if (data) {
+      try {
+        this.memoryCache.budgets = JSON.parse(data);
+        return [...this.memoryCache.budgets];
+      } catch (e) {
+        console.warn('Failed to parse budgets:', e);
+      }
+    }
+    return [];
   }
 
   saveBudgets(budgets: Budget[]): void {
-    localStorage.setItem(`budgets_${this.userId}`, JSON.stringify(budgets));
+    this.memoryCache.budgets = [...budgets];
+    const saved = safeLocalStorage.setItem(`budgets_${this.userId}`, JSON.stringify(budgets));
+    
+    if (!saved) {
+      console.warn('Failed to save budgets to localStorage, keeping in memory');
+    }
     
     if (this.isSupabaseConnected && hasSupabaseCredentials()) {
       syncBudgets(this.userId, budgets)
         .then(() => {
-          localStorage.setItem('supabase_last_sync', new Date().toISOString());
+          safeLocalStorage.setItem('supabase_last_sync', new Date().toISOString());
         })
-        .catch(() => {});
+        .catch((err) => {
+          console.warn('Failed to sync budgets to Supabase:', err);
+        });
     }
   }
 
@@ -197,27 +339,53 @@ class StorageManager {
       console.log(`Fetching categories from Supabase for user ${this.userId}`);
     }
     
-    const data = localStorage.getItem(`categories_${this.userId}`);
-    return data ? JSON.parse(data) : [];
+    if (this.memoryCache.categories.length > 0) {
+      return [...this.memoryCache.categories];
+    }
+    
+    const data = safeLocalStorage.getItem(`categories_${this.userId}`);
+    if (data) {
+      try {
+        this.memoryCache.categories = JSON.parse(data);
+        return [...this.memoryCache.categories];
+      } catch (e) {
+        console.warn('Failed to parse categories:', e);
+      }
+    }
+    return [];
   }
 
   saveCategories(categories: Category[]): void {
-    localStorage.setItem(`categories_${this.userId}`, JSON.stringify(categories));
+    this.memoryCache.categories = [...categories];
+    const saved = safeLocalStorage.setItem(`categories_${this.userId}`, JSON.stringify(categories));
+    
+    if (!saved) {
+      console.warn('Failed to save categories to localStorage, keeping in memory');
+    }
     
     if (this.isSupabaseConnected && hasSupabaseCredentials()) {
       syncCategories(this.userId, categories)
         .then(() => {
-          localStorage.setItem('supabase_last_sync', new Date().toISOString());
+          safeLocalStorage.setItem('supabase_last_sync', new Date().toISOString());
         })
-        .catch(() => {});
+        .catch((err) => {
+          console.warn('Failed to sync categories to Supabase:', err);
+        });
     }
   }
 
   // Data management
   clearAllData(): void {
-    localStorage.removeItem(`transactions_${this.userId}`);
-    localStorage.removeItem(`budgets_${this.userId}`);
-    localStorage.removeItem(`categories_${this.userId}`);
+    safeLocalStorage.removeItem(`transactions_${this.userId}`);
+    safeLocalStorage.removeItem(`budgets_${this.userId}`);
+    safeLocalStorage.removeItem(`categories_${this.userId}`);
+    
+    // Clear memory cache
+    this.memoryCache = {
+      transactions: [],
+      budgets: [],
+      categories: []
+    };
     
     // Reinitialize with clean data
     this.initializeDefaultData();
@@ -228,6 +396,11 @@ class StorageManager {
     }
     
     console.log(`All data cleared and reinitialized for user ${this.userId}`);
+  }
+
+  // Force refresh from localStorage (useful after page reload)
+  refreshFromStorage(): void {
+    this.loadDataToCache();
   }
 }
 
