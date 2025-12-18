@@ -39,8 +39,11 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # Pass repo to Vite so base path resolves to /<repo>/ in production
           GITHUB_REPOSITORY: ${{ github.repository }}
+          NODE_ENV: production
+
+      - name: Copy 404 page for SPA routing
+        run: cp dist/index.html dist/404.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { storageManager } from '../storage';
 import { toast } from 'sonner';
@@ -10,34 +9,58 @@ export const useSupabase = () => {
   const [isSupabaseConnected, setIsSupabaseConnected] = useState<boolean>(
     storageManager.isConnectedToSupabase()
   );
+  const [isConnecting, setIsConnecting] = useState(false);
   
   useEffect(() => {
     setIsSupabaseConnected(storageManager.isConnectedToSupabase());
   }, []);
   
   const connectToSupabase = async (url: string, anonKey: string) => {
+    setIsConnecting(true);
+    
     try {
-      // Validate credentials format
-      if (!url.includes('supabase.co') && !url.includes('localhost')) {
-        throw new Error('Invalid Supabase URL format');
+      // Validate and clean URL
+      let cleanUrl = url.trim();
+      if (!cleanUrl.startsWith('http')) {
+        cleanUrl = `https://${cleanUrl}`;
+      }
+      // Remove trailing slash
+      cleanUrl = cleanUrl.replace(/\/$/, '');
+      
+      // Validate URL format
+      if (!cleanUrl.includes('supabase.co') && !cleanUrl.includes('localhost')) {
+        throw new Error('Invalid Supabase URL. It should look like: https://your-project.supabase.co');
       }
       
-      if (!anonKey || anonKey.length < 50) {
-        throw new Error('Invalid anon key format');
+      // Validate anon key
+      const cleanKey = anonKey.trim();
+      if (!cleanKey || cleanKey.length < 50) {
+        throw new Error('Invalid anon key. Make sure you copied the full key from Supabase.');
       }
 
       // Save credentials first
-      setSupabaseCredentials(url, anonKey);
+      setSupabaseCredentials(cleanUrl, cleanKey);
 
       // Test the connection
       const client = getSupabaseClient();
       if (!client) {
-        throw new Error('Failed to create Supabase client');
+        throw new Error('Failed to create Supabase client. Check your credentials.');
       }
 
-      // Verify all required tables exist
+      // Verify all required tables exist with better error handling
       const { verifyTablesExist } = await import('../remoteSync');
-      const verification = await verifyTablesExist();
+      
+      let verification;
+      try {
+        verification = await verifyTablesExist();
+      } catch (e: any) {
+        // Connection error
+        clearSupabaseCredentials();
+        if (e.message?.includes('FetchError') || e.message?.includes('fetch')) {
+          throw new Error('Cannot reach Supabase. Check your URL and internet connection.');
+        }
+        throw new Error(`Connection failed: ${e.message || 'Unknown error'}`);
+      }
       
       if (!verification.ok) {
         const success = await writeToClipboard(SETUP_SQL);
@@ -46,16 +69,14 @@ export const useSupabase = () => {
         clearSupabaseCredentials();
         
         if (success) {
-          toast.error(`Cannot connect: Missing database tables (${missingTablesMsg}). Setup SQL copied to clipboard - run it in your Supabase SQL editor first.`, {
+          toast.info('Setup SQL copied to clipboard! Run it in your Supabase SQL Editor first.', {
             duration: 10000
           });
         } else {
-          toast.error(`Cannot connect: Missing database tables (${missingTablesMsg}). Check console for setup SQL.`, {
-            duration: 10000
-          });
-          console.info('[Supabase Setup SQL - Copy and run this in your SQL Editor first]\n', SETUP_SQL);
+          console.info('[Supabase Setup SQL]\n', SETUP_SQL);
         }
-        throw new Error(`Missing required tables: ${missingTablesMsg}`);
+        
+        throw new Error(`Missing database tables: ${missingTablesMsg}. Please run the setup SQL first.`);
       }
 
       // Tables exist - proceed with connection
@@ -63,7 +84,13 @@ export const useSupabase = () => {
       
       // Pull existing data from Supabase
       const { pullAll } = await import('../remoteSync');
-      const remoteData = await pullAll(userId);
+      let remoteData;
+      try {
+        remoteData = await pullAll(userId);
+      } catch (e) {
+        console.warn('Could not pull remote data, will use local:', e);
+        remoteData = { transactions: [], budgets: [], categories: [] };
+      }
       
       // Get local data
       const localTransactions = storageManager.getTransactions();
@@ -84,25 +111,19 @@ export const useSupabase = () => {
       storageManager.saveBudgets(mergedBudgets);
       storageManager.saveCategories(mergedCategories);
       
-      toast.success('Connected to Supabase! Data synced successfully.');
+      toast.success('Connected to Supabase! Your data is now synced.');
     } catch (e: any) {
       clearSupabaseCredentials();
       storageManager.connectToSupabase(false);
       setIsSupabaseConnected(false);
       
       const errorMessage = e.message || 'Unknown error';
-      if (errorMessage.includes('Invalid')) {
-        toast.error(`Connection failed: ${errorMessage}`);
-      } else if (errorMessage.includes('Missing required tables')) {
-        // Already showed detailed error above
-      } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
-        toast.error('Network error: Check your internet connection and Supabase URL.');
-      } else {
-        toast.error('Failed to connect to Supabase. Verify your credentials and database setup.');
-      }
       
+      // Don't show duplicate toast - error will be displayed by the dialog
       console.error('Supabase connection error:', e);
-      throw e;
+      throw new Error(errorMessage);
+    } finally {
+      setIsConnecting(false);
     }
   };
 
@@ -110,11 +131,12 @@ export const useSupabase = () => {
     storageManager.connectToSupabase(false);
     clearSupabaseCredentials();
     setIsSupabaseConnected(false);
-    toast.success('Disconnected from Supabase');
+    toast.success('Disconnected from Supabase. Your data remains stored locally.');
   };
 
   return {
     isSupabaseConnected,
+    isConnecting,
     connectToSupabase,
     disconnectFromSupabase
   };
