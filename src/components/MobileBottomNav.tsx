@@ -1,4 +1,4 @@
-import { Home, PiggyBank, Wallet, ChartBar, Settings } from "lucide-react";
+import { Home, PiggyBank, Wallet, BarChart3, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -6,7 +6,7 @@ const navItems = [
   { icon: Home, label: "Home", path: "/" },
   { icon: Wallet, label: "Expenses", path: "/expenses" },
   { icon: PiggyBank, label: "Income", path: "/income" },
-  { icon: ChartBar, label: "Analytics", path: "/analytics" },
+  { icon: BarChart3, label: "Analytics", path: "/analytics" },
   { icon: Settings, label: "Settings", path: "/settings" },
 ];
 
