@@ -1,14 +1,12 @@
 // ExpenseCoin Service Worker
-// Version: 2.0.0 - Enhanced PWA support
+// Version: 3.0.0 - No-notifications + cache refresh
 
-const CACHE_NAME = 'expensecoin-v2';
-const STATIC_CACHE = 'expensecoin-static-v2';
-const DYNAMIC_CACHE = 'expensecoin-dynamic-v2';
+const CACHE_VERSION = 'v3';
+const STATIC_CACHE = `expensecoin-static-${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `expensecoin-dynamic-${CACHE_VERSION}`;
 
-// Static assets to cache immediately
+// Static assets to cache immediately (avoid caching HTML to prevent stale deploys)
 const STATIC_ASSETS = [
-  './',
-  './index.html',
   './manifest.json',
   './favicon.ico',
   './pwa-192x192.png',
@@ -70,12 +68,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // For navigation requests (HTML pages), use network-first
+  // For navigation requests (HTML), force network (prevents stale UI after deploy)
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
+      fetch(new Request(request.url, { cache: 'no-store' }))
         .then((response) => {
-          // Cache the response
+          // Cache the latest navigation response for offline fallback
           const responseClone = response.clone();
           caches.open(DYNAMIC_CACHE).then((cache) => {
             cache.put(request, responseClone);
