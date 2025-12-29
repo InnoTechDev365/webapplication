@@ -1,37 +1,28 @@
 
-import { storageManager } from './storage';
+import { syncManager } from './syncManager';
 import { Transaction, Category, Budget } from './types';
 
 export class DataService {
   // Transaction methods
   getTransactions(): Transaction[] {
-    return storageManager.getTransactions();
+    return syncManager.getTransactions();
   }
 
   addTransaction(transaction: Transaction): void {
-    storageManager.addTransaction(transaction);
+    syncManager.addTransaction(transaction);
   }
 
   updateTransaction(updated: Transaction): void {
-    const transactions = storageManager.getTransactions();
-    const index = transactions.findIndex(t => t.id === updated.id);
-    if (index !== -1) {
-      transactions[index] = { ...transactions[index], ...updated };
-      storageManager.saveTransactions(transactions);
-    }
+    syncManager.updateTransaction(updated);
   }
 
   deleteTransaction(id: string): void {
-    const transactions = storageManager.getTransactions();
-    const next = transactions.filter(t => t.id !== id);
-    if (next.length !== transactions.length) {
-      storageManager.saveTransactions(next);
-    }
+    syncManager.deleteTransaction(id);
   }
 
   // Category methods
   getCategories(): Category[] {
-    return storageManager.getCategories();
+    return syncManager.getCategories();
   }
 
   getCategoryById(id: string): Category | undefined {
@@ -49,11 +40,11 @@ export class DataService {
 
   // Budget methods
   getBudgets(): Budget[] {
-    return storageManager.getBudgets();
+    return syncManager.getBudgets();
   }
 
   addBudget(budget: Budget): void {
-    storageManager.addBudget(budget);
+    syncManager.addBudget(budget);
   }
 
   // Analytics methods - these will return 0 for new users with no transactions
@@ -222,7 +213,7 @@ export class DataService {
 
   // Clear all user data
   clearAllData(): void {
-    storageManager.clearAllData();
+    syncManager.clearAllData();
   }
 }
 
